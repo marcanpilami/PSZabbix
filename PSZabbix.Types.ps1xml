@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Types>
+    <Type>
+        <Name>ZabbixUserGroup</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>count</Name>
+                <GetScriptBlock>$this.users.Count</GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+
+    <Type>
+        <Name>ZabbixUser</Name>
+        <Members>
+            <ScriptProperty>
+                <Name>usrgrpsnames</Name>
+                <GetScriptBlock>@(foreach($grp in $this.usrgrps) {$grp.name})</GetScriptBlock>
+            </ScriptProperty>
+        </Members>
+    </Type>
+</Types>
