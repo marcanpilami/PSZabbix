@@ -27,6 +27,10 @@ function new-JsonrpcRequest($method, $params, $auth = $null)
 function New-ApiSession($ApiUri, $auth)
 {
     $r = Invoke-RestMethod -Uri $ApiUri -Method Post -ContentType "application/json" -Body (new-JsonrpcRequest "user.login" @{user = $auth.UserName; password = $auth.GetNetworkCredential().Password})
+    if ($r -eq $null -or $r.result -eq $null -or [string]::IsNullOrWhiteSpace($r.result))
+    {
+        Write-Error -Message "Session could not be opened"
+    }
     $script:latestSession = @{Uri = $ApiUri; Auth = $r.result}
     $script:latestSession
 }
@@ -74,13 +78,14 @@ function Get-Host
         # Only retrieve items which belong to the given group(s).
         [int[]]$GroupId,
 
+        [Parameter(Mandatory=$False)]
         [string][Alias("HostName")]$Name
     )
-    $prms = @{filter= @{}}
+    $prms = @{filter= @{}; selectInterfaces = 1; selectParentTemplates = 1}
     if ($Id.Length -gt 0) {$prms["hostids"] = $Id}
     if ($GroupId.Length -gt 0) {$prms["groupids"] = $GroupId}
     if ($Name -ne $null) {$prms["filter"]["name"] = $Name}
-    Invoke-ZabbixApi $session "host.get"  $prms |% {$_.PSTypeNames.Insert(0,"ZabbixHost"); $_}
+    Invoke-ZabbixApi $session "host.get" $prms |% {$_.PSTypeNames.Insert(0,"ZabbixHost"); $_}
 }
 
 
@@ -185,6 +190,48 @@ function Remove-Host
 
     $prms = @($Host |% { if($_.hostid -ne $null) { $_.hostid } else {$_} })
     Invoke-ZabbixApi $session "host.delete" $prms | select -ExpandProperty hostids
+}
+
+
+function Enable-Host
+{
+    param
+    (
+        [Parameter(Mandatory=$False)]
+        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        [Hashtable] $Session,
+
+        [parameter(Mandatory=$true, ValueFromPipeline=$true)][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixHost' -or $_ -is [int] })]
+        # The host or hostid to enable.
+        [PSCustomObject]$Host
+    )
+
+    Process
+    {
+        $id = if($Host.hostid -ne $null) {$Host.hostid} else {$Host}
+        Invoke-ZabbixApi $session "host.update" @{hostid=$id; status=0}
+    }
+}
+
+
+function Disable-Host
+{
+    param
+    (
+        [Parameter(Mandatory=$False)]
+        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        [Hashtable] $Session,
+
+        [parameter(Mandatory=$true, ValueFromPipeline=$true)][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixHost' -or $_ -is [int] })]
+        # The host or hostid to disable.
+        [PSCustomObject]$Host
+    )
+
+    Process
+    {
+        $id = if($Host.hostid -ne $null) {$Host.hostid} else {$Host}
+        Invoke-ZabbixApi $session "host.update" @{hostid=$id; status=1}
+    }
 }
 
 
