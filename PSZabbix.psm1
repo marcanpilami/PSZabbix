@@ -447,6 +447,71 @@ function Get-User
 }
 
 
+Add-Type -TypeDefinition @"
+   public enum ZbxUserType
+   {
+      User = 1,
+      Admin,
+      SuperAdmin      
+   }
+"@
+
+
+function New-User
+{
+    param
+    (
+        [Parameter(Mandatory=$False)]
+        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        [Hashtable] $Session,
+
+        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true)][Alias("Login")]
+        # Login of the new user. Must be unique.
+        [string] $Alias,
+
+        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true)][Alias("Pwd")]
+        # Password of the new user. If not specified, a long random string is used (useful if authenticated 
+        # against a LDAP, as in that case the internal Zabbix password is not used).
+        [string] $Password = $null,
+
+        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true)]
+        # Display name of the new user. If not given, the Alias is used.
+        [string] $Name,
+        
+        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )]
+        # Type of user. Default is simple user.
+        [ZbxUserType] $UserType = [ZbxUserType]::User,
+
+        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName="Ids")]
+        [int[]]$UserGroupIds,
+
+        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName="Objects")]
+        [PSCustomObject[]]$UserGroups
+    )
+
+    $usergrps = @()
+    if ($UserGroupIds -ne $null)
+    {
+        $UserGroupIds |% { $usergrps += @{usrgrpid = $_} }
+    }
+    else 
+    {
+        $usergrps = $UserGroups
+    }
+    
+    $prms = @{
+        alias = $Alias
+        name = if ($Name -ne $null) { $Name } else {$Alias}
+        type = [int]$UserType
+        passwd = if ($Password -ne $null) {$Password} else { "" + (Get-Random -Maximum ([long]::MaxValue)) }
+        usrgrps = $usergrps
+    }
+
+    $id = Invoke-ZabbixApi $session "user.create"  $prms
+    Get-User -Id $id.userids
+}
+
+
 function Push-User
 {
     param
