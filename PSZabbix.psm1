@@ -439,10 +439,10 @@ function Get-User
 
         [string][Alias("UserName")]$Name
     )
-    $prms = @{selectUsrgrps = "extend"; getAccess = 1; filter= @{}}
+    $prms = @{selectUsrgrps = "extend"; getAccess = 1; search= @{}; searchWildcardsEnabled = 1}
     if ($Id.Length -gt 0) {$prms["userids"] = $Id}
     if ($GroupId.Length -gt 0) {$prms["usrgrpids"] = $GroupId}
-    if ($Name -ne $null) {$prms["filter"]["alias"] = $Name}
+    if ($Name -ne $null) {$prms["search"]["alias"] = $Name}
     Invoke-ZabbixApi $session "user.get"  $prms |% {$_.PSTypeNames.Insert(0,"ZabbixUser"); $_}
 }
 
@@ -509,6 +509,40 @@ function New-User
 
     $id = Invoke-ZabbixApi $session "user.create"  $prms
     Get-User -Id $id.userids
+}
+
+
+function Remove-User
+{
+    [CmdletBinding(DefaultParameterSetName="Ids")]
+    param
+    (
+        [Parameter(Mandatory=$False)]
+        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        [Hashtable] $Session,
+
+        [Parameter(Mandatory=$True, ValueFromPipeline=$true, ParameterSetName="Ids", Position=0)]
+        # ID of the user to remove.
+        [int] $UserId,
+        
+        [Parameter(Mandatory=$True, ValueFromPipeline=$true, ParameterSetName="Objects", Position=0)]
+        [ValidateScript({ $_.userid -ne $null })]
+        # User to remove.
+        [PSCustomObject] $User
+    )
+
+    Begin
+    {
+        $ids = @()
+    }
+    process
+    {
+        $ids += if ($PSCmdlet.ParameterSetName -eq "Ids") { $UserId } else { $User.userid }
+    }
+    end
+    {
+        Invoke-ZabbixApi $session "user.delete"  $ids | select -ExpandProperty userids
+    }    
 }
 
 
