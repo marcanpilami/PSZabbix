@@ -11,10 +11,10 @@ $global:admin2 = New-Object System.Management.Automation.PSCredential ("Admin", 
 Import-Module $here/$sut -Force
 
 InModuleScope PSZabbix {    
-    $s = New-ApiSession $baseUrl $admin
+    $s = New-ApiSession $baseUrl $admin -silent
     
     Describe "New-ApiSession" {
-        $session = New-ApiSession $baseUrl $admin
+        $session = New-ApiSession $baseUrl $admin -silent
 
         It "connects to zabbix and returns a non-empty session object" {
             $session | should Not Be $null
