@@ -24,6 +24,13 @@ function New-JsonrpcRequest($method, $params, $auth = $null)
 }
 
 
+function Get-ApiVersion($Session)
+{
+    $r = Invoke-RestMethod -Uri $session.Uri -Method Post -ContentType "application/json" -Body (new-JsonrpcRequest "apiinfo.version" @{})
+    $r.result
+}
+
+
 function New-ApiSession($ApiUri, $auth)
 {
     $r = Invoke-RestMethod -Uri $ApiUri -Method Post -ContentType "application/json" -Body (new-JsonrpcRequest "user.login" @{user = $auth.UserName; password = $auth.GetNetworkCredential().Password})
@@ -33,6 +40,14 @@ function New-ApiSession($ApiUri, $auth)
     }
     $script:latestSession = @{Uri = $ApiUri; Auth = $r.result}
     $script:latestSession
+
+    $ver = Get-ApiVersion -Session $script:latestSession
+    $vers = $ver.split(".")
+    if ( ($vers[0] -lt 2) -or ($vers[0] -eq 2 -and $vers[1] -lt 4))
+    {
+        Write-Warning "PSZabbix has not been tested with this version of Zabbix ${ver}. Tested version are >= 2.4. It should still work but be warned."
+    }
+    Write-Warning "Connected to Zabbix version ${ver}"
 }
 
 
