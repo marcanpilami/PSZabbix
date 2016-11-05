@@ -62,6 +62,15 @@ function Invoke-ZabbixApi($session, $method, $parameters = @{})
 ## HOSTS
 ################################################################################
 
+Add-Type -TypeDefinition @"
+   public enum ZbxStatus
+   {
+      Enabled = 0,
+      Disabled = 1    
+   }
+"@
+
+
 function Get-Host
 {
     [cmdletbinding()]
@@ -137,7 +146,11 @@ function New-Host
 
         [parameter(Mandatory=$false)]
         # The port to use to use to contact the host. Default is 10050.
-        $Port = 10050
+        $Port = 10050,
+
+        [parameter(Mandatory=$false)]
+        # Should the newly created host be enabled? Default is true.
+        [ZbxStatus] $Status = [ZbxStatus]::Enabled
     )
 
     $isIp = 0
@@ -170,6 +183,7 @@ function New-Host
         templates = $Template
         inventory_mode = 0
         inventory = $Inventory
+        status = [int]$Status
     }
 
     $r = Invoke-ZabbixApi $session "host.create" $prms

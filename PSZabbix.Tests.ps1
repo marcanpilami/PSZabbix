@@ -32,8 +32,15 @@ InModuleScope PSZabbix {
     }
 
     Describe "New-Host" {
-        It "creates a new enabled host from explicit ID parameters" {
-            New-Host -Name "pestertesthost$(Get-Random)" -GroupId 2 -TemplateId 10108 -Dns localhost
+        It "can create an enabled host from explicit ID parameters" {
+            $h = New-Host -Name "pestertesthost$(Get-Random)" -GroupId 2 -TemplateId 10108 -Dns localhost
+            $h | should not be $null
+            $h.status | should be 0
+        }
+        It "can create an disabled host from explicit ID parameters" {
+            $h = New-Host -Name "pestertesthost$(Get-Random)" -GroupId 2 -TemplateId 10108 -Dns localhost -status disabled
+            $h | should not be $null
+            $h.status | should be 1
         }
     }
 
