@@ -17,11 +17,11 @@
                         <Alignment>left</Alignment>
                     </TableColumnHeader>
                     <TableColumnHeader>
-                        <Width>45</Width>
+                        <Width>43</Width>
                         <Alignment>left</Alignment>
                     </TableColumnHeader>
                     <TableColumnHeader>
-                        <Width>6</Width>
+                        <Width>8</Width>
                     </TableColumnHeader>
                 </TableHeaders>
                 <TableRowEntries>

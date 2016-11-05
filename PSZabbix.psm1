@@ -111,7 +111,7 @@ function Get-Host
     if ($Id.Length -gt 0) {$prms["hostids"] = $Id}
     if ($GroupId.Length -gt 0) {$prms["groupids"] = $GroupId}
     if ($Name -ne $null) {$prms["search"]["name"] = $Name}
-    Invoke-ZabbixApi $session "host.get" $prms |% {$_.hostid = [int]$_.hostid; $_.PSTypeNames.Insert(0,"ZabbixHost"); $_}
+    Invoke-ZabbixApi $session "host.get" $prms |% {$_.status = [ZbxStatus]$_.status; $_.hostid = [int]$_.hostid; $_.PSTypeNames.Insert(0,"ZabbixHost"); $_}
 }
 
 
