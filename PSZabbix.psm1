@@ -67,7 +67,7 @@ function Get-Host
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )][Alias("HostId")][int[]]
@@ -94,7 +94,7 @@ function New-Host
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [parameter(Mandatory=$true)][Alias("HostName")]
@@ -180,7 +180,7 @@ function Remove-Host
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
@@ -198,7 +198,7 @@ function Enable-Host
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [parameter(Mandatory=$true, ValueFromPipeline=$true)][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixHost' -or $_ -is [int] })]
@@ -219,7 +219,7 @@ function Disable-Host
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [parameter(Mandatory=$true, ValueFromPipeline=$true)][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixHost' -or $_ -is [int] })]
@@ -240,7 +240,7 @@ function Add-HostGroupMembership
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=1)][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixHost'})][Alias("Host")][ValidateNotNullOrEmpty()]
@@ -272,7 +272,7 @@ function Remove-HostGroupMembership
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=1)][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixHost'})][Alias("Host")][ValidateNotNullOrEmpty()]
@@ -309,7 +309,7 @@ function Get-Template
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true)][Alias("TemplateId")][int[]]
@@ -349,7 +349,7 @@ function Get-Group
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
         
         # Only retrieve the groups with the given ID(s)
@@ -374,7 +374,7 @@ function New-Group
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [parameter(Mandatory=$true)][Alias("HostName")]
@@ -396,7 +396,7 @@ function Remove-Group
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
@@ -419,7 +419,7 @@ function Get-UserGroup
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true)][Alias("UsergrpId")]
@@ -445,7 +445,7 @@ function New-UserGroup
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [parameter(Mandatory=$true)][Alias("UserGroupName")]
@@ -467,7 +467,7 @@ function Remove-UserGroup
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
@@ -490,7 +490,7 @@ function Get-User
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true)][Alias("UserId")]
@@ -526,7 +526,7 @@ function New-User
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true)][Alias("Login")]
@@ -582,7 +582,7 @@ function Remove-User
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [Parameter(Mandatory=$True, ValueFromPipeline=$true, ParameterSetName="Ids", Position=0)]
@@ -615,7 +615,7 @@ function Push-User
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [Parameter(Mandatory=$True, ParameterSetName="Objects")]
@@ -665,7 +665,7 @@ function Pop-User
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [Parameter(Mandatory=$True, ParameterSetName="Objects")]
@@ -720,7 +720,7 @@ function Get-Action
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true)][Alias("ActionId")]
@@ -834,7 +834,7 @@ function Get-Proxy
     param
     (
         [Parameter(Mandatory=$False)]
-        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
         [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )][Alias("ProxyId")][int[]]
