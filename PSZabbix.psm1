@@ -7,7 +7,7 @@ $latestSession = $null
 ## INTERNAL HELPERS
 ################################################################################
 
-function new-JsonrpcRequest($method, $params, $auth = $null)
+function New-JsonrpcRequest($method, $params, $auth = $null)
 {
     if ($params.output -eq $null -and $method -like "*.get")
     {
@@ -79,7 +79,7 @@ function Get-Host
         # Only retrieve items which belong to the given group(s).
         [int[]] $GroupId,
 
-        [Parameter(Mandatory=$False)][Alias("HostName")]
+        [Parameter(Mandatory=$False, Position=0)][Alias("HostName")]
         # Filter by hostname. Accepts wildcard.
         [string] $Name
     )
@@ -87,7 +87,7 @@ function Get-Host
     if ($Id.Length -gt 0) {$prms["hostids"] = $Id}
     if ($GroupId.Length -gt 0) {$prms["groupids"] = $GroupId}
     if ($Name -ne $null) {$prms["search"]["name"] = $Name}
-    Invoke-ZabbixApi $session "host.get" $prms |% {$_.PSTypeNames.Insert(0,"ZabbixHost"); $_}
+    Invoke-ZabbixApi $session "host.get" $prms |% {$_.hostid = [int]$_.hostid; $_.PSTypeNames.Insert(0,"ZabbixHost"); $_}
 }
 
 
@@ -173,7 +173,7 @@ function New-Host
     }
 
     $r = Invoke-ZabbixApi $session "host.create" $prms
-    Get-Host $s -Id $r.hostids
+    Get-Host -session $s -Id $r.hostids
 }
 
 
@@ -185,9 +185,9 @@ function Remove-Host
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)][ValidateNotNullOrEmpty()]
-        # One or more hosts to remove. Either host objects (they must have a hostid property) or directly IDs (integers).
-        [Array]$Host
+        [parameter(Mandatory=$true, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true, Position=0)][ValidateNotNullOrEmpty()][Alias("Id")]
+        # The ID of one or more hosts to remove. You can also pipe a ZabbixHost object or any object with a hostid or id property.
+        [int[]]$HostId
     )
 
     begin
@@ -196,7 +196,7 @@ function Remove-Host
     }
     process
     {
-        $prms += if($Host.hostid -ne $null) { $Host.hostid } else {$Host} 
+        $prms += $HostId 
     }
     end
     {
@@ -214,9 +214,9 @@ function Enable-Host
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)][ValidateScript({ $_.hostid -ne $null -or $_ -is [int] })]
-        # One or more host or hostid to enable.
-        [PSCustomObject[]]$Host
+        [Parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true, ValueFromPipeline=$true, Position=0)][Alias("Id", "Host")]
+        # The ID of one or more hosts to enable. You can also pipe a ZabbixHost object or any object with a hostid or id property.
+        [int[]]$HostId
     )
     begin
     {
@@ -224,7 +224,7 @@ function Enable-Host
     }
     Process
     {
-        $ids += if($Host.hostid -ne $null) {$Host | select hostid} else {$Host |% @{hostid = $_}}
+         $HostId |% {$ids += @{hostid = $_}}
     }
     end
     {
@@ -242,9 +242,9 @@ function Disable-Host
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)][ValidateScript({ $_.hostid -ne $null -or $_ -is [int] })]
-        # One or more host or hostid to disable.
-        [PSCustomObject[]]$Host
+        [Parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true, ValueFromPipeline=$true, Position=0)][Alias("Id", "Host")]
+        # The ID of one or more hosts to disable. You can also pipe a ZabbixHost object or any object with a hostid or id property.
+        [int[]]$HostId
     )
     begin
     {
@@ -252,7 +252,7 @@ function Disable-Host
     }
     Process
     {
-        $ids += if($Host.hostid -ne $null) {$Host | select hostid} else {$Host |% @{hostid = $_}}
+        $HostId |% {$ids += @{hostid = $_}}
     }
     end
     {
@@ -339,30 +339,61 @@ function Get-Template
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true)][Alias("TemplateId")][int[]]
+        [Parameter(Mandatory=$False)][Alias("TemplateId")]
         # Only retrieve the template with the given ID.
-        $Id,
+        [int[]] $Id,
         
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )]
+        [Parameter(Mandatory=$False)]
         # Only retrieve remplates which belong to the given group(s).
-        [int[]]$GroupId,
+        [int[]] $GroupId,
 
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )]
+        [Parameter(Mandatory=$False)]
         # Only retrieve templates which are linked to the given hosts
-        [int[]]$HostId,
+        [int[]] $HostId,
 
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )]
+        [Parameter(Mandatory=$False)]
         # Only retrieve templates which are children of the given parent template(s)
-        [int[]]$ParentId,
+        [int[]] $ParentId,
 
-        [string][Alias("TemplateName")]$Name
+        [Parameter(Mandatory=$False, Position=0)][Alias("TemplateName")]
+        # Filter by name. Accepts wildcard.
+        [string] $Name
     )
-    $prms = @{filter= @{}}
+    $prms = @{search= @{}; searchWildcardsEnabled=1}
     if ($Id.Length -gt 0) {$prms["templateids"] = $Id}
     if ($GroupId.Length -gt 0) {$prms["groupids"] = $GroupId}
     if ($HostId.Length -gt 0) {$prms["hostids"] = $HostId}
-    if ($Name -ne $null) {$prms["filter"]["name"] = $Name}
-    Invoke-ZabbixApi $session "template.get"  $prms |% {$_.PSTypeNames.Insert(0,"ZabbixTemplate"); $_}
+    if ($Name -ne $null) {$prms["search"]["name"] = $Name}
+    Invoke-ZabbixApi $session "template.get"  $prms |% {$_.templateid = [int]$_.templateid; $_.PSTypeNames.Insert(0,"ZabbixTemplate"); $_}
+}
+
+
+function Remove-Template
+{
+    param
+    (
+        [Parameter(Mandatory=$False)]
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
+        [Hashtable] $Session,
+        
+        [parameter(Mandatory=$true, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true, Position=0)][ValidateNotNullOrEmpty()][Alias("TemplateId", "templateid")]
+        # The templates to remove. Either template objects (with a templateid property) or directly IDs.
+        [int[]]$Template
+    )
+
+    begin
+    {
+        $prms = @()
+    }
+    process
+    {
+        $prms += $Template 
+    }
+    end
+    {
+        if ($prms.Count -eq 0) { return }
+        Invoke-ZabbixApi $session "template.delete" $prms | select -ExpandProperty templateids
+    }
 }
 
 
@@ -371,6 +402,7 @@ function Get-Template
 ## GROUPS (hostgroups)
 ################################################################################
 
+#region host groups
 function Get-Group
 {
     param
@@ -379,20 +411,23 @@ function Get-Group
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
         
+        [Parameter(Mandatory=$False)]
         # Only retrieve the groups with the given ID(s)
         [int[]] $Id, 
         
-        [int[]]
+        [Parameter(Mandatory=$False)]
         # Only retrieve the groups which contain the given host(s)
-        $HostId,
+        [int[]] $HostId,
 
-        [string][Alias("GroupName")]$Name
+        [Parameter(Mandatory=$False, Position=0)][Alias("GroupName")]
+        # Filter by name. Accepts wildcard.
+        [string] $Name
     )
-    $prms = @{filter= @{}}
+    $prms = @{search= @{}; searchWildcardsEnabled = 1; selectHosts = 1}
     if ($HostId.Length -gt 0) {$prms["hostids"] = $HostId}
     if ($Id.Length -gt 0) {$prms["groupids"] = $Id}
-    if ($Name -ne $null) {$prms["filter"]["name"] = $Name}
-    Invoke-ZabbixApi $session "hostgroup.get"  $prms |% {$_.PSTypeNames.Insert(0,"ZabbixGroup"); $_}
+    if ($Name -ne $null) {$prms["search"]["name"] = $Name}
+    Invoke-ZabbixApi $session "hostgroup.get"  $prms |% {$_.groupid = [int]$_.groupid; $_.PSTypeNames.Insert(0,"ZabbixGroup"); $_}
 }
 
 
@@ -404,17 +439,23 @@ function New-Group
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [parameter(Mandatory=$true)][Alias("HostName")]
-        # The name of the new group
-        [string] $Name
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true, Position=0)][ValidateNotNullOrEmpty()][Alias("HostGroupName")]
+        # The name of the new group (one or more separated by commas)
+        [string[]] $Name
     )
-
-    $prms = @{
-        name = $Name        
+    begin
+    {
+        $prms = @()
     }
-
-    $r = Invoke-ZabbixApi $session "hostgroup.create" $prms
-    Get-Group $s -Id $r.groupids
+    process
+    {
+        $Name |% { $prms += @{name = $_} }
+    }
+    end
+    {
+        $r = Invoke-ZabbixApi $session "hostgroup.create" $prms
+        Get-Group -Session $s -Id $r.groupids
+    }
 }
 
 
@@ -426,14 +467,26 @@ function Remove-Group
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
-        # The groups to remove. Either group objects (with a groupid property) or directly IDs.
-        [Array]$Group
+        [parameter(Mandatory=$true, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true, Position=0)][ValidateNotNullOrEmpty()][Alias("Id", "Group")]
+        # ID of one or more groups to remove. You can also pipe in objects with an "ID" of "groupid" property.
+        [int[]]$GroupId
     )
 
-    $prms = @($Group |% { if($_.groupid -ne $null) { $_.groupid } else {$_} })
-    Invoke-ZabbixApi $session "hostgroup.delete" $prms | select -ExpandProperty groupids
+    begin
+    {
+        $prms = @()
+    }
+    process
+    {
+        $prms += $GroupId 
+    }
+    end
+    {
+        if ($prms.Count -eq 0) { return }
+        Invoke-ZabbixApi $session "hostgroup.delete" $prms | select -ExpandProperty groupids
+    }
 }
+#endregion
 
 
 
@@ -449,21 +502,23 @@ function Get-UserGroup
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true)][Alias("UsergrpId")]
+        [Parameter(Mandatory=$False)][Alias("UserGroupId", "UsrGrpId")]
         # Only retrieve the usergroup with the given ID
         [int[]] $Id,
         
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )]
+        [Parameter(Mandatory=$False)]
         # Only retrieve groups which contain the given users
-        [int[]]$UserId,
+        [int[]] $UserId,
 
-        [string][Alias("UserGroupName")]$Name
+        [Parameter(Mandatory=$False, Position=0)][Alias("UserGroupName")]
+        # Filter by name. Accepts wildcard.
+        [string] $Name
     )
-    $prms = @{selectUsers= 1; selectRights = 1; filter= @{}}
+    $prms = @{searchWildcardsEnabled=1; selectUsers= 1; selectRights = 1; search= @{}}
     if ($Id.Length -gt 0) {$prms["usrgrpids"] = $Id}
     if ($UserId.Length -gt 0) {$prms["userids"] = $UserId}
-    if ($Name -ne $null) {$prms["filter"]["name"] = $Name}
-    Invoke-ZabbixApi $session "usergroup.get"  $prms |% {$_.PSTypeNames.Insert(0,"ZabbixUserGroup"); $_}
+    if ($Name -ne $null) {$prms["search"]["name"] = $Name}
+    Invoke-ZabbixApi $session "usergroup.get"  $prms |% {$_.usrgrpid = [int]$_.usrgrpid; $_.PSTypeNames.Insert(0,"ZabbixUserGroup"); $_}
 }
 
 
@@ -475,17 +530,23 @@ function New-UserGroup
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [parameter(Mandatory=$true)][Alias("UserGroupName")]
-        # The name of the new group
-        [string] $Name
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true, Position=0)][ValidateNotNullOrEmpty()][Alias("UserGroupName")]
+        # The name of the new group (one or more separated by commas)
+        [string[]] $Name
     )
-
-    $prms = @{
-        name = $Name        
+    begin
+    {
+        $prms = @()
     }
-
-    $r = Invoke-ZabbixApi $session "usergroup.create" $prms
-    Get-UserGroup $s -Id $r.usrgrpids
+    process
+    {
+        $Name |% { $prms += @{name = $_} }
+    }
+    end
+    {
+        $r = Invoke-ZabbixApi $session "usergroup.create" $prms
+        Get-UserGroup -Session $s -Id $r.usrgrpids
+    }
 }
 
 
@@ -497,13 +558,24 @@ function Remove-UserGroup
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
-        # The groups to remove. Either group objects (with a usrgrpid property) or directly IDs.
-        [Array]$UserGroup
+        [parameter(Mandatory=$true, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true, Position=0)][ValidateNotNullOrEmpty()][Alias("UsrGrpId", "UserGroup", "Id")]
+        # Id of one or more groups to remove. You can also pipe in objects with an "Id" of "usrgrpid" property.
+        [int[]]$UserGroupId
     )
 
-    $prms = @($UserGroup |% { if($_.usrgrpids -ne $null) { $_.usrgrpids } else {$_} })
-    Invoke-ZabbixApi $session "usergroup.delete" $prms | select -ExpandProperty usrgrpids
+    begin
+    {
+        $prms = @()
+    }
+    process
+    {
+        $prms += $UserGroupId 
+    }
+    end
+    {
+        if ($prms.Count -eq 0) { return }
+        Invoke-ZabbixApi $session "usergroup.delete" $prms | select -ExpandProperty usrgrpids
+    }
 }
 
 
@@ -528,13 +600,15 @@ function Get-User
         # Only retrieve groups which contain the given users
         [int[]] $GroupId,
 
-        [string][Alias("UserName")]$Name
+        [Parameter(Mandatory=$False, Position=0)][Alias("UserName")]
+        # Filter by name. Accepts wildcard.
+        [string] $Name
     )
     $prms = @{selectUsrgrps = "extend"; getAccess = 1; search= @{}; searchWildcardsEnabled = 1}
     if ($Id.Length -gt 0) {$prms["userids"] = $Id}
     if ($GroupId.Length -gt 0) {$prms["usrgrpids"] = $GroupId}
     if ($Name -ne $null) {$prms["search"]["alias"] = $Name}
-    Invoke-ZabbixApi $session "user.get"  $prms |% {$_.PSTypeNames.Insert(0,"ZabbixUser"); $_}
+    Invoke-ZabbixApi $session "user.get"  $prms |% {$_.userid = [int]$_.userid; $_.PSTypeNames.Insert(0,"ZabbixUser"); $_}
 }
 
 
@@ -560,7 +634,7 @@ function New-User
         # Login of the new user. Must be unique.
         [string] $Alias,
 
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true)][Alias("Pwd")]
+        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true)][Alias("Pwd", "passwd")]
         # Password of the new user. If not specified, a long random string is used (useful if authenticated 
         # against a LDAP, as in that case the internal Zabbix password is not used).
         [string] $Password = $null,
@@ -573,71 +647,79 @@ function New-User
         # Type of user. Default is simple user.
         [ZbxUserType] $UserType = [ZbxUserType]::User,
 
-        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName="Ids")]
-        [int[]]$UserGroupIds,
+        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName = "ids")][ValidateNotNullOrEmpty()][Alias("UsrGrpId")]
+        [int[]] $UserGroupId,
 
-        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName="Objects")]
-        [PSCustomObject[]]$UserGroups
+        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName = "objects")][ValidateNotNullOrEmpty()][Alias("UsrGrps")]
+        [ValidateScript({ $_.usrgrpid -ne $null})]
+        [object[]] $UserGroup
     )
 
-    $usergrps = @()
-    if ($UserGroupIds -ne $null)
+    begin
     {
-        $UserGroupIds |% { $usergrps += @{usrgrpid = $_} }
+        $prms = @()
     }
-    else 
+    process
     {
-        $usergrps = $UserGroups
-    }
-    
-    $prms = @{
-        alias = $Alias
-        name = if ($Name -ne $null) { $Name } else {$Alias}
-        type = [int]$UserType
-        passwd = if ($Password -ne $null) {$Password} else { "" + (Get-Random -Maximum ([long]::MaxValue)) }
-        usrgrps = $usergrps
-    }
+        $usergrps = @()
+        if ($PSCmdlet.ParameterSetName -eq "ids")
+        {
+            $UserGroupId |% { $usergrps += @{usrgrpid = $_} }
+        }
+        else 
+        {
+            $usergrps += $UserGroup
+        }
 
-    $id = Invoke-ZabbixApi $session "user.create"  $prms
-    Get-User -Id $id.userids
+        $prms += @{
+            alias = $Alias
+            name = if ($Name -ne $null) { $Name } else {$Alias}
+            type = [int]$UserType
+            passwd = if ($Password -ne $null) {$Password} else { "" + (Get-Random -Maximum ([long]::MaxValue)) }
+            usrgrps = $usergrps
+        }
+    }
+    end
+    {
+        $id = Invoke-ZabbixApi $session "user.create"  $prms
+        Get-User -Session $Session -Id $id.userids
+    }
 }
 
 
 function Remove-User
 {
-    [CmdletBinding(DefaultParameterSetName="Ids")]
     param
     (
         [Parameter(Mandatory=$False)]
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [Parameter(Mandatory=$True, ValueFromPipeline=$true, ParameterSetName="Ids", Position=0)]
-        # ID of the user to remove.
-        [int] $UserId,
-        
-        [Parameter(Mandatory=$True, ValueFromPipeline=$true, ParameterSetName="Objects", Position=0)]
-        [ValidateScript({ $_.userid -ne $null })]
-        # User to remove.
-        [PSCustomObject] $User
+        [Parameter(Mandatory=$True, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true, Position=0)][ValidateNotNullOrEmpty()][Alias("User", "Id")]
+        # One or more users to remove. Either user objects (with a userid property) or directly IDs.
+        [int[]] $UserId
     )
 
     Begin
     {
-        $ids = @()
+        $prms = @()
     }
     process
     {
-        $ids += if ($PSCmdlet.ParameterSetName -eq "Ids") { $UserId } else { $User.userid }
+        $prms += $UserId 
     }
     end
     {
-        Invoke-ZabbixApi $session "user.delete"  $ids | select -ExpandProperty userids
+        if ($prms.Count -eq 0) { return }
+        Invoke-ZabbixApi $session "user.delete"  $prms | select -ExpandProperty userids
     }    
 }
 
-
-function Push-User
+<#
+    .notes
+    Very slow when modifying many users as there is no "mass update" API for this operation in Zabbix.
+#>
+function Add-UserGroupMembership
 {
     param
     (
@@ -645,49 +727,74 @@ function Push-User
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [Parameter(Mandatory=$True, ParameterSetName="Objects")]
-        # Group to add the user to
-        $Group,
-        
-        [Parameter(Mandatory=$True, ParameterSetName="Objects" )]
+        [Parameter(Mandatory=$True, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)][Alias("Id", "User")]
+        [ValidateNotNullOrEmpty()]
         # User to add to the group
-        $User,
+        [int[]] $UserId,
 
-        [Parameter(Mandatory=$True, ParameterSetName="Ids")]
+        [Parameter(Mandatory=$True, ParameterSetName="Objects", Position=0)][ValidateScript({ $_.usrgrpid -ne $null})]
         # Group to add the user to
-        $GroupId,
+        [PSCustomObject[]] $UserGroup,
         
-        [Parameter(Mandatory=$True, ParameterSetName="Ids")]
-        # User to add to the group
-        $UserId
+        [Parameter(Mandatory=$True, ParameterSetName="Ids",Position=0)]
+        # Group to add the user to
+        [int[]] $UserGroupId
     )
 
-    if ($Group -ne $null)
+    begin
     {
-        $GroupId = $Group.groupid
+        $prms = @()
+        $groupids = @()
+        if ($PSCmdlet.ParameterSetName -eq "Objects")
+        {
+            $UserGroup |% { $groupids += $_.usrgrpid}
+        }
+        else 
+        {
+             $groupids += $UserGroupId
+        }
     }
-    if ($UserId -ne $null)
+    process
     {
-        $User = Get-ZabbixUser $s -id $UserId
-    }
-    $grps = @($User.usrgrps)
-    if (($grps |? usrgrpid -eq $GroupId | measure).Count -eq 1)
-    {
-        Write-Warning "Already in group - nothing will be done"
-        return
-    }
-    $grps += @{usrgrpid = $GroupId}
+        foreach ($uid in $UserId)
+        {
+            $User = Get-User -session $s -id $uid
+            $grps = @()
+            $existingGid = @($User.usrgrps.usrgrpid)
+            $addedGid = @()
 
-    $prms = @{
-        userid = $User.userid
-        usrgrps = $grps
+            foreach ($gid in $groupids)
+            {
+                if (-not ($gid -in $existingGid))
+                {
+                    $addedGid += $gid
+                }
+            }
+
+            if ($addedGid.count -eq 0)
+            {
+                # already in requested groups
+                continue
+            }
+
+            $addedGid += $existingGid
+            foreach($gid in $addedGid)
+            {
+                $grps += @{usrgrpid = $gid}
+            }
+
+            $prms = @{
+                userid = $User.userid
+                usrgrps = $grps
+            }
+            # Sad, but not mass API.
+            Invoke-ZabbixApi $session "user.update"  $prms | select -ExpandProperty userids
+        }
     }
-    
-    Invoke-ZabbixApi $session "user.update"  $prms
 }
 
 
-function Pop-User
+function Remove-UserGroupMembership
 {
     param
     (
@@ -695,45 +802,74 @@ function Pop-User
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [Parameter(Mandatory=$True, ParameterSetName="Objects")]
-        # Group to remove the user from
-        $Group,
-        
-        [Parameter(Mandatory=$True, ParameterSetName="Objects" )]
-        # User to remove from the group
-        $User,
+        [Parameter(Mandatory=$True, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)][Alias("Id", "User")]
+        [ValidateNotNullOrEmpty()]
+        # User to remove from the groups
+        [int[]] $UserId,
 
-        [Parameter(Mandatory=$True, ParameterSetName="Ids")]
-        # Group to remove the user from
-        $GroupId,
+        [Parameter(Mandatory=$True, ParameterSetName="Objects", Position=0)][ValidateScript({ $_.usrgrpid -ne $null})]
+        # Groups to remove the users from
+        [PSCustomObject[]] $UserGroup,
         
-        [Parameter(Mandatory=$True, ParameterSetName="Ids")]
-        # User to remove from the group
-        $UserId
+        [Parameter(Mandatory=$True, ParameterSetName="Ids",Position=0)]
+        # Groups to remove the users from
+        [int[]] $UserGroupId
     )
 
-    if ($Group -ne $null)
+    begin
     {
-        $GroupId = $Group.groupid
+        $prms = @()
+        $groupids = @()
+        if ($PSCmdlet.ParameterSetName -eq "Objects")
+        {
+            $UserGroup |% { $groupids += $_.usrgrpid}
+        }
+        else 
+        {
+             $groupids += $UserGroupId
+        }
     }
-    if ($UserId -ne $null)
+    process
     {
-        $User = Get-ZabbixUser $s -id $UserId
-    }
-    $grps = $User.usrgrps
-    if (($grps |? usrgrpid -eq $GroupId | measure).Count -eq 0)
-    {
-        Write-Warning "User not in group - nothing will be done"
-        return
-    }
-    $grps = @($grps |? usrgrpid -ne $GroupId)
+        foreach ($uid in $UserId)
+        {
+            $User = Get-User -session $s -id $uid
+            $grps = @()
+            $existingGid = @($User.usrgrps.usrgrpid)
+            $removedGid = @()
+            $remainingGid = @()
 
-    $prms = @{
-        userid = $User.userid
-        usrgrps = $grps
+            foreach ($gid in $existingGid)
+            {
+                if (($gid -in $groupids))
+                {
+                    $removedGid += $gid
+                }
+                else 
+                {
+                    $remainingGid += $gid
+                }
+            }
+
+            if ($removedGid.count -eq 0)
+            {
+                # already absent from requested groups
+                continue
+            }
+
+            foreach($gid in $remainingGid)
+            {
+                $grps += @{usrgrpid = $gid}
+            }
+
+            $prms = @{
+                userid = $User.userid
+                usrgrps = $grps
+            }
+            # Sad, but not mass API.
+            Invoke-ZabbixApi $session "user.update"  $prms | select -ExpandProperty userids
+        }
     }
-    
-    Invoke-ZabbixApi $session "user.update"  $prms
 }
 
 
@@ -750,40 +886,42 @@ function Get-Action
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true)][Alias("ActionId")]
+        [Parameter(Mandatory=$False)][Alias("ActionId")]
         # Only retrieve the action with the given ID
         [int[]] $Id,
         
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )]
+        [Parameter(Mandatory=$False)]
         # Only retrieve actions which use the following hosts in their conditions
         [int[]] $HostId,
 
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )]
+        [Parameter(Mandatory=$False)]
         # Only retrieve actions which use the following groups in their conditions
         [int[]] $GroupId,
 
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )]
+        [Parameter(Mandatory=$False)]
         # Only retrieve actions which use the following triggers in their conditions
         [int[]] $TriggerId,
 
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )]
+        [Parameter(Mandatory=$False)]
         # Only retrieve actions which send messages to these users
         [int[]] $UserId,
 
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )][Alias("UsergrpId")]
+        [Parameter(Mandatory=$False)][Alias("UsergrpId")]
         # Only retrieve actions which send messages to these user groups
         [int[]] $UserGroupId,
 
-        [string][Alias("ActionName")]$Name
+        [Parameter(Mandatory=$False, Position=0)][Alias("ActionName")]
+        # Filter by name
+        [string] $Name
     )
-    $prms = @{selectConditions = "extend"; selectOperations = "extend"; filter= @{}}
+    $prms = @{searchWildcardsEnabled=1; selectConditions = "extend"; selectOperations = "extend"; search= @{}}
     if ($Id.Length -gt 0) {$prms["actionids"] = $Id}
     if ($HostId.Length -gt 0) {$prms["hostids"] = $HostId}
     if ($GroupId.Length -gt 0) {$prms["groupids"] = $GroupId}
     if ($TriggerId.Length -gt 0) {$prms["triggerids"] = $TriggerId}
     if ($UserId.Length -gt 0) {$prms["userids"] = $UserId}
     if ($UserGroupId.Length -gt 0) {$prms["usrgrpids"] = $UserGroupId}
-    if ($Name -ne $null) {$prms["filter"]["name"] = $Name}
+    if ($Name -ne $null) {$prms["search"]["name"] = $Name}
     $res = Invoke-ZabbixApi $session "action.get"  $prms
     $res |% { $action = $_; $action | Add-Member -NotePropertyName "OperationsReadable" -notepropertyvalue @($action.operations | Get-ReadableOperation) }
     $res |% {$_.PSTypeNames.Insert(0,"ZabbixAction")}
@@ -864,14 +1002,16 @@ function Get-Proxy
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )][Alias("ProxyId")][int[]]
+        [Parameter(Mandatory=$False)][Alias("ProxyId")][int[]]
         # Only retrieve the item with the given ID.
         $Id,
 
-        [string][Alias("ProxyName")]$Name
+        [Parameter(Mandatory=$False, Position=0)][Alias("ProxyName")]
+        # Filter by name. Accepts wildcard.
+        [string]$Name
     )
-    $prms = @{filter= @{selectInterface=1}}
+    $prms = @{searchWildcardsEnabled=1; filter= @{selectInterface=1}; search=@{}}
     if ($Id.Length -gt 0) {$prms["proxyids"] = $Id}
-    if ($Name -ne $null) {$prms["filter"]["name"] = $Name}
-    Invoke-ZabbixApi $session "proxy.get"  $prms |% {$_.PSTypeNames.Insert(0,"ZabbixProxy"); $_}
+    if ($Name -ne $null) {$prms["search"]["name"] = $Name}
+    Invoke-ZabbixApi $session "proxy.get"  $prms |% {$_.proxyid = [int]$_.proxyid; $_.PSTypeNames.Insert(0,"ZabbixProxy"); $_}
 }
