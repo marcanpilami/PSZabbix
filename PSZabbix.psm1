@@ -467,6 +467,7 @@ function New-Group
     }
     end
     {
+        if ($prms.Count -eq 0) { return }
         $r = Invoke-ZabbixApi $session "hostgroup.create" $prms
         Get-Group -Session $s -Id $r.groupids
     }
@@ -558,6 +559,7 @@ function New-UserGroup
     }
     end
     {
+        if ($prms.Count -eq 0) { return }
         $r = Invoke-ZabbixApi $session "usergroup.create" $prms
         Get-UserGroup -Session $s -Id $r.usrgrpids
     }
@@ -695,6 +697,7 @@ function New-User
     }
     end
     {
+        if ($prms.Count -eq 0) { return }
         $id = Invoke-ZabbixApi $session "user.create"  $prms
         Get-User -Session $Session -Id $id.userids
     }
