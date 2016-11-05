@@ -81,10 +81,10 @@ function Get-Host
         [Parameter(Mandatory=$False)]
         [string][Alias("HostName")]$Name
     )
-    $prms = @{filter= @{}; selectInterfaces = 1; selectParentTemplates = 1}
+    $prms = @{search= @{}; searchWildcardsEnabled = 1; selectInterfaces = 1; selectParentTemplates = 1}
     if ($Id.Length -gt 0) {$prms["hostids"] = $Id}
     if ($GroupId.Length -gt 0) {$prms["groupids"] = $GroupId}
-    if ($Name -ne $null) {$prms["filter"]["name"] = $Name}
+    if ($Name -ne $null) {$prms["search"]["name"] = $Name}
     Invoke-ZabbixApi $session "host.get" $prms |% {$_.PSTypeNames.Insert(0,"ZabbixHost"); $_}
 }
 
@@ -232,6 +232,70 @@ function Disable-Host
         $id = if($Host.hostid -ne $null) {$Host.hostid} else {$Host}
         Invoke-ZabbixApi $session "host.update" @{hostid=$id; status=1}
     }
+}
+
+
+function Add-HostGroupMembership
+{
+    param
+    (
+        [Parameter(Mandatory=$False)]
+        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        [Hashtable] $Session,
+
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=1)][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixHost'})][Alias("Host")][ValidateNotNullOrEmpty()]
+        # The host or hostid to add to the hostgroup.
+        [PSCustomObject[]]$Hosts,
+
+        [Parameter(Mandatory=$true, Position=0)][ValidateNotNullOrEmpty()]
+        # The Host is added to this list of one or more hostgroups.
+        [PSCustomObject[]]$Groups
+    )
+    begin
+    {
+        $grpids = @($Groups |% {@{groupid = $_.groupid}} )
+        $prms = @{hosts = @(); groups = $grpids}
+    }
+    process
+    {
+        $prms["hosts"] += $Hosts.hostid
+    }
+    end
+    {
+        Invoke-ZabbixApi $session "host.massadd" $prms | select -ExpandProperty hostids
+    }   
+}
+
+
+function Remove-HostGroupMembership
+{
+    param
+    (
+        [Parameter(Mandatory=$False)]
+        # A valid Zabbix API session retrieved with New-ZabbixApiSession. If not given, the latest opened session will be used.
+        [Hashtable] $Session,
+
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=1)][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixHost'})][Alias("Host")][ValidateNotNullOrEmpty()]
+        # The host or hostid to remove from the hostgroup(s).
+        [PSCustomObject[]]$Hosts,
+
+        [Parameter(Mandatory=$true, Position=0)][ValidateNotNullOrEmpty()][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixGroup'})]
+        # The Host is removed from this list of one or more hostgroups.
+        [PSCustomObject[]]$Groups
+    )
+    begin
+    {
+        $grpids = @($Groups |% {$_.groupid} )
+        $prms = @{hostids = @(); groupids = $grpids}
+    }
+    process
+    {
+        $prms["hostids"] += $Hosts.hostid
+    }
+    end
+    {
+        Invoke-ZabbixApi $session "host.massremove" $prms | select -ExpandProperty hostids
+    }   
 }
 
 
