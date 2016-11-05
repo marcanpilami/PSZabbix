@@ -64,22 +64,24 @@ function Invoke-ZabbixApi($session, $method, $parameters = @{})
 
 function Get-Host
 {
+    [cmdletbinding()]
     param
     (
         [Parameter(Mandatory=$False)]
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )][Alias("HostId")][int[]]
+        [Parameter(Mandatory=$False)][Alias("HostId")]
         # Only retrieve the item with the given ID.
-        $Id,
+        [int[]] $Id,
         
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )]
-        # Only retrieve items which belong to the given group(s).
-        [int[]]$GroupId,
-
         [Parameter(Mandatory=$False)]
-        [string][Alias("HostName")]$Name
+        # Only retrieve items which belong to the given group(s).
+        [int[]] $GroupId,
+
+        [Parameter(Mandatory=$False)][Alias("HostName")]
+        # Filter by hostname. Accepts wildcard.
+        [string] $Name
     )
     $prms = @{search= @{}; searchWildcardsEnabled = 1; selectInterfaces = 1; selectParentTemplates = 1}
     if ($Id.Length -gt 0) {$prms["hostids"] = $Id}
@@ -183,13 +185,24 @@ function Remove-Host
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [parameter(Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
-        # The groups to remove. Either group objects (with a groupid property) or directly IDs.
+        [parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)][ValidateNotNullOrEmpty()]
+        # One or more hosts to remove. Either host objects (they must have a hostid property) or directly IDs (integers).
         [Array]$Host
     )
 
-    $prms = @($Host |% { if($_.hostid -ne $null) { $_.hostid } else {$_} })
-    Invoke-ZabbixApi $session "host.delete" $prms | select -ExpandProperty hostids
+    begin
+    {
+        $prms = @()
+    }
+    process
+    {
+        $prms += if($Host.hostid -ne $null) { $Host.hostid } else {$Host} 
+    }
+    end
+    {
+        if ($prms.Count -eq 0) { return }
+        Invoke-ZabbixApi $session "host.delete" $prms | select -ExpandProperty hostids
+    }
 }
 
 
@@ -201,15 +214,22 @@ function Enable-Host
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [parameter(Mandatory=$true, ValueFromPipeline=$true)][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixHost' -or $_ -is [int] })]
-        # The host or hostid to enable.
-        [PSCustomObject]$Host
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)][ValidateScript({ $_.hostid -ne $null -or $_ -is [int] })]
+        # One or more host or hostid to enable.
+        [PSCustomObject[]]$Host
     )
-
+    begin
+    {
+        $ids = @()
+    }
     Process
     {
-        $id = if($Host.hostid -ne $null) {$Host.hostid} else {$Host}
-        Invoke-ZabbixApi $session "host.update" @{hostid=$id; status=0}
+        $ids += if($Host.hostid -ne $null) {$Host | select hostid} else {$Host |% @{hostid = $_}}
+    }
+    end
+    {
+        if ($ids.Count -eq 0) { return }
+        Invoke-ZabbixApi $session "host.massupdate" @{hosts=$ids; status=0} | select -ExpandProperty hostids
     }
 }
 
@@ -222,15 +242,22 @@ function Disable-Host
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [parameter(Mandatory=$true, ValueFromPipeline=$true)][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixHost' -or $_ -is [int] })]
-        # The host or hostid to disable.
-        [PSCustomObject]$Host
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)][ValidateScript({ $_.hostid -ne $null -or $_ -is [int] })]
+        # One or more host or hostid to disable.
+        [PSCustomObject[]]$Host
     )
-
+    begin
+    {
+        $ids = @()
+    }
     Process
     {
-        $id = if($Host.hostid -ne $null) {$Host.hostid} else {$Host}
-        Invoke-ZabbixApi $session "host.update" @{hostid=$id; status=1}
+        $ids += if($Host.hostid -ne $null) {$Host | select hostid} else {$Host |% @{hostid = $_}}
+    }
+    end
+    {
+        if ($ids.Count -eq 0) { return }
+        Invoke-ZabbixApi $session "host.massupdate" @{hosts=$ids; status=1} | select -ExpandProperty hostids
     }
 }
 
