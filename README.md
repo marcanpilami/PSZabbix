@@ -36,7 +36,7 @@ All cmdlets have a "get-help" documentation. Here are the basics:
 PS> Import-Module PSZabbix
 
 # You must first create a session against a Zabbix server - only needed once per work session.
-PS> $s = New-ZbxApiSession "http://myserver/zabbix/api_jsonrpc.php" (Get-Credentials MyAdminLogin)
+PS> $s = New-ZbxApiSession "http://myserver/zabbix/api_jsonrpc.php" (Get-Credential MyAdminLogin)
 
 # Then call any cmdlet
 PS> Get-ZbxHost

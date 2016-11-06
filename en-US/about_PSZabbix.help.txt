@@ -25,7 +25,7 @@ LONG DESCRIPTION
 
 EXAMPLES
     Import-Module PSZabbix # only needed if powershell version <=3
-    New-ZbxApiSession "http://myserver/zabbix/api_jsonrpc.php" (Get-Credentials MyAdminLogin)
+    New-ZbxApiSession "http://myserver/zabbix/api_jsonrpc.php" (Get-Credential MyAdminLogin)
     Get-ZbxHost 
 
 KEYWORDS
