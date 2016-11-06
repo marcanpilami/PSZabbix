@@ -199,7 +199,7 @@ function New-Host
     The ZabbixHost object created.
 
     .EXAMPLE
-    PS> New-Host -Name "mynewhostname$(Get-Random)" -HostGroupId 2 -TemplateId 10108 -Dns localhost
+    PS> New-ZbxHost -Name "mynewhostname$(Get-Random)" -HostGroupId 2 -TemplateId 10108 -Dns localhost
     hostid host                    name                                        status
     ------ ----                    ----                                        ------
     10084  mynewhostname321        mynewhostname                               Enabled
@@ -248,15 +248,19 @@ function New-Host
 
         [parameter(Mandatory=$true)]
         # The DNS or IP address to use to contact the host
-        [string]$Dns,
+        [string] $Dns,
 
         [parameter(Mandatory=$false)]
         # The port to use to use to contact the host. Default is 10050.
-        $Port = 10050,
+        [int] $Port = 10050,
 
         [parameter(Mandatory=$false)]
         # Should the newly created host be enabled? Default is true.
-        [ZbxStatus] $Status = [ZbxStatus]::Enabled
+        [ZbxStatus] $Status = [ZbxStatus]::Enabled,
+
+        [parameter(Mandatory=$false)]
+        # The ID of the proxy to use. Default is no proxy.
+        [int] $ProxyId
     )
 
     $isIp = 0
@@ -290,6 +294,7 @@ function New-Host
         inventory_mode = 0
         inventory = $Inventory
         status = [int]$Status
+        proxy_hostid = if ($ProxyId -eq $null) { "" } else { $ProxyId }
     }
 
     $r = Invoke-ZabbixApi $session "host.create" $prms
