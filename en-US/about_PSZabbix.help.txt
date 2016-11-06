@@ -1,0 +1,35 @@
+TOPIC
+    about_PSZabbix
+
+SHORT DESCRIPTION
+    This modules enables an administrator to do and automate common
+    administration operations on a Zabbix server.
+
+LONG DESCRIPTION
+    This module aims at making it easy to automate the creation of standard 
+    objects inside Zabbix. That way, Zabbix can be included inside fully 
+    automated workflows like server provisioning. It may for example be used 
+    inside a script task of SCVMM to reference a new VM inside Zabbix after 
+    creation, or to add a newly created user (by your preferred provisioning 
+    tool) to a set of user groups.
+
+    The objects which can be managed are only the basic objects: hosts, host 
+    groups, users, user groups, templates and a few others. The module does not
+    expose the full Zabbix API. We actually expect administrators to use the
+    Zabbix UI to do complex operations like adding monitored items to hosts or
+    templates (moreover, these operations being rare, there is little value in
+    automating them). 
+
+    This module is tested on Zabbix 2.4 and later, 3.2 and later. It should 
+    also work and other versions but without any guarantee.
+
+EXAMPLES
+    Import-Module PSZabbix # only needed if powershell version <=3
+    New-ZbxApiSession "http://myserver/zabbix/api_jsonrpc.php" (Get-Credentials MyAdminLogin)
+    Get-ZbxHost 
+
+KEYWORDS
+    Zabbix
+
+SEE ALSO
+    Zabbix API reference: https://www.zabbix.com/documentation/2.4/manual/api 

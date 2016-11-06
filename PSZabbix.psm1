@@ -30,9 +30,42 @@ function Get-ApiVersion($Session)
     $r.result
 }
 
-
-function New-ApiSession($ApiUri, $auth, [switch]$Silent)
+function New-ApiSession
 {
+    <#
+    .SYNOPSIS
+    Create a new authenticated session which can be used to call the Zabbix REST API.
+    
+    .DESCRIPTION
+    It must be called all other functions. It returns the actual session object, but usually
+    this object is not needed as the module caches and reuses the latest successful session.
+
+    The validity of the credentials is checked and an error is thrown if not.
+
+    .INPUTS
+    This function does not take pipe input.
+
+    .OUTPUTS
+    The session object.
+
+    .EXAMPLE
+    PS> New-ZbxApiSession "http://myserver/zabbix/api_jsonrpc.php" (Get-Credentials MyAdminLogin)
+    Name                           Value
+    ----                           -----
+    Auth                           2cce0ad0fac0a5da348fdb70ae9b233b
+    Uri                            http://myserver/zabbix/api_jsonrpc.php
+    WARNING : Connected to Zabbix version 3.2.1
+    #>
+    param(
+        # The Zabbix REST endpoint. It should be like "http://myserver/zabbix/api_jsonrpc.php".
+        [uri] $ApiUri, 
+        
+        # The credentials used to authenticate. Use Get-Credential to create this object.
+        [PSCredential]$auth, 
+        
+        # If this switch is used, the information message "connected to..." will not be displayed.
+        [switch]$Silent
+    )
     $r = Invoke-RestMethod -Uri $ApiUri -Method Post -ContentType "application/json" -Body (new-JsonrpcRequest "user.login" @{user = $auth.UserName; password = $auth.GetNetworkCredential().Password})
     if ($r -eq $null -or $r.result -eq $null -or [string]::IsNullOrWhiteSpace($r.result))
     {
@@ -91,7 +124,39 @@ Add-Type -TypeDefinition @"
 
 function Get-Host
 {
-    [cmdletbinding()]
+    <#
+    .SYNOPSIS
+    Retrieve and filter hosts.
+    
+    .DESCRIPTION
+    Query all hosts (not templates) with basic filters, or get all hosts. 
+
+    .INPUTS
+    This function does not take pipe input.
+
+    .OUTPUTS
+    The ZabbixHost objects corresponding to the filter.
+
+    .EXAMPLE
+    PS> Get-ZbxHost
+    hostid host                    name                                        status
+    ------ ----                    ----                                        ------
+    10084  Zabbix server           Zabbix server                               Enabled
+    10105  Agent Mongo 1           Agent Mongo 1                               Enabled
+
+    .EXAMPLE
+    PS> Get-ZbxHost -Id 10084
+    hostid host                    name                                        status
+    ------ ----                    ----                                        ------
+    10084  Zabbix server           Zabbix server                               Enabled
+
+    .EXAMPLE
+    PS> Get-ZbxHost "Agent*"
+    hostid host                    name                                        status
+    ------ ----                    ----                                        ------
+    10105  Agent Mongo 1           Agent Mongo 1                               Enabled
+    10106  Agent Mongo 2           Agent Mongo 2                               Enabled
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -99,7 +164,7 @@ function Get-Host
         [Hashtable] $Session,
 
         [Parameter(Mandatory=$False)][Alias("HostId")]
-        # Only retrieve the item with the given ID.
+        # Only retrieve the items with the given ID(s).
         [int[]] $Id,
         
         [Parameter(Mandatory=$False)]
@@ -120,6 +185,29 @@ function Get-Host
 
 function New-Host
 {
+    <#
+    .SYNOPSIS
+    Create a new host.
+    
+    .DESCRIPTION
+    Create a new host. 
+
+    .INPUTS
+    This function does not take pipe input.
+
+    .OUTPUTS
+    The ZabbixHost object created.
+
+    .EXAMPLE
+    PS> New-Host -Name "mynewhostname$(Get-Random)" -HostGroupId 2 -TemplateId 10108 -Dns localhost
+    hostid host                    name                                        status
+    ------ ----                    ----                                        ------
+    10084  mynewhostname321        mynewhostname                               Enabled
+
+    .NOTES
+    Contrary to other New-* functions inside this module, this method does not take pipe input. 
+    This is inconsistent and needs to be changed.
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -211,6 +299,25 @@ function New-Host
 
 function Remove-Host
 {
+    <#
+    .SYNOPSIS
+    Remove one or more hosts from Zabbix.
+    
+    .DESCRIPTION
+    Removal is immediate. 
+
+    .INPUTS
+    This function accepts ZabbixHost objects or host IDs from the pipe. Equivalent to using -HostId parameter.
+
+    .OUTPUTS
+    The ID of the removed objects.
+
+    .EXAMPLE
+    Remove all hosts
+    PS> Get-ZbxHost | Remove-ZbxHost
+    10084
+    10085
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -240,6 +347,25 @@ function Remove-Host
 
 function Enable-Host
 {
+    <#
+    .SYNOPSIS
+    Enable one or more hosts from Zabbix.
+    
+    .DESCRIPTION
+    Simple change of the status of the host. Idempotent.
+
+    .INPUTS
+    This function accepts ZabbixHost objects or host IDs from the pipe. Equivalent to using -HostId parameter.
+
+    .OUTPUTS
+    The ID of the changed objects.
+
+    .EXAMPLE
+    Enable all hosts
+    PS> Get-ZbxHost | Enable-ZbxHost
+    10084
+    10085
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -268,6 +394,25 @@ function Enable-Host
 
 function Disable-Host
 {
+    <#
+    .SYNOPSIS
+    Disable one or more hosts from Zabbix.
+    
+    .DESCRIPTION
+    Simple change of the status of the host. Idempotent.
+
+    .INPUTS
+    This function accepts ZabbixHost objects or host IDs from the pipe. Equivalent to using -HostId parameter.
+
+    .OUTPUTS
+    The ID of the changed objects.
+
+    .EXAMPLE
+    Disable all hosts
+    PS> Get-ZbxHost | Disable-ZbxHost
+    10084
+    10085
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -296,6 +441,26 @@ function Disable-Host
 
 function Add-HostGroupMembership
 {
+    <#
+    .SYNOPSIS
+    Make a host (or multiple hosts) member of one or more host groups. 
+    
+    .DESCRIPTION
+    This is additional: existing membership to other groups are not changed. 
+
+    .INPUTS
+    This function accepts ZabbixHost objects from the pipe. Equivalent to using -Host parameter.
+
+    .OUTPUTS
+    The ID of the changed objects.
+
+    .EXAMPLE
+    PS> Get-ZbxHost | Add-ZbxHostGroupMembership (Get-ZbxGroup group1),(Get-ZbxGroup group2)
+    10084
+    10085
+
+    Add two groups to all hosts
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -328,6 +493,26 @@ function Add-HostGroupMembership
 
 function Remove-HostGroupMembership
 {
+    <#
+    .SYNOPSIS
+    Remove a host (or multiple hosts) as a member of one or more host groups. 
+    
+    .DESCRIPTION
+    This is additional: existing membership to other groups are not changed. 
+
+    .INPUTS
+    This function accepts ZabbixHost objects from the pipe. Equivalent to using -Host parameter.
+
+    .OUTPUTS
+    The ID of the changed objects.
+
+    .EXAMPLE
+    PS> Get-ZbxHost | Remove-ZbxHostGroupMembership (Get-ZbxGroup group1),(Get-ZbxGroup group2)
+    10084
+    10085
+
+    Make sure no host is member of two specified groups.
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -365,6 +550,34 @@ function Remove-HostGroupMembership
 
 function Get-Template
 {
+    <#
+    .SYNOPSIS
+    Retrieve and filter templates.
+    
+    .DESCRIPTION
+    Query all templates (not hosts) with basic filters, or get all templates. 
+
+    .INPUTS
+    This function does not take pipe input.
+
+    .OUTPUTS
+    The ZabbixTemplate objects corresponding to the filter.
+
+    .EXAMPLE
+    PS> Get-ZbxHost
+    templateid name                                               description
+    ---------- ----                                               -----------
+    10001      Template OS Linux
+    10047      Template App Zabbix Server
+    10048      Template App Zabbix Proxy
+    10050      Template App Zabbix Agent
+
+    .EXAMPLE
+    PS> Get-ZbxHost -Id 10001
+    templateid name                                               description
+    ---------- ----                                               -----------
+    10001      Template OS Linux
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -402,15 +615,34 @@ function Get-Template
 
 function Remove-Template
 {
+    <#
+    .SYNOPSIS
+    Remove one or more templates from Zabbix.
+    
+    .DESCRIPTION
+    Removal is immediate. 
+
+    .INPUTS
+    This function accepts ZabbixTemplate objects or template IDs from the pipe. Equivalent to using -TemplateId parameter.
+
+    .OUTPUTS
+    The ID of the removed objects.
+
+    .EXAMPLE
+    Remove all templates
+    PS> Get-ZbxTemplate | Remove-ZbxTemplate
+    10084
+    10085
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
         
-        [parameter(Mandatory=$true, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true, Position=0)][ValidateNotNullOrEmpty()][Alias("TemplateId", "templateid")]
+        [parameter(Mandatory=$true, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true, Position=0)][ValidateNotNullOrEmpty()][Alias("Template")]
         # The templates to remove. Either template objects (with a templateid property) or directly IDs.
-        [int[]]$Template
+        [int[]]$TemplateId
     )
 
     begin
@@ -419,7 +651,7 @@ function Remove-Template
     }
     process
     {
-        $prms += $Template 
+        $prms += $TemplateId 
     }
     end
     {
@@ -437,6 +669,40 @@ function Remove-Template
 #region host groups
 function Get-HostGroup
 {
+    <#
+    .SYNOPSIS
+    Retrieve and filter host groups.
+    
+    .DESCRIPTION
+    Query all host groups with basic filters, or get all host groups. 
+
+    .INPUTS
+    This function does not take pipe input.
+
+    .OUTPUTS
+    The ZabbixHostGroup objects corresponding to the filter.
+
+    .EXAMPLE
+    PS> Get-ZbxHostGroup "Linux*"
+    groupid internal flags name
+    ------- -------- ----- ----
+          1 0        0     Linux Group 1
+          2 0        0     Linux Group 2
+
+    .EXAMPLE
+    PS> Get-ZbxHostGroup
+    groupid internal flags name
+    ------- -------- ----- ----
+          1 0        0     Templates
+          2 0        0     Linux servers
+          4 0        0     Zabbix servers
+
+    .EXAMPLE
+    PS> Get-ZbxHostGroup -Id 1
+    groupid internal flags name
+    ------- -------- ----- ----
+          1 0        0     Templates
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -465,6 +731,33 @@ function Get-HostGroup
 
 function New-HostGroup
 {
+    <#
+    .SYNOPSIS
+    Create a new host group.
+    
+    .DESCRIPTION
+    Create a new host group. 
+
+    .INPUTS
+    This function accepts a ZabbixHostGroup as pipe input, or any object which properties map the function parameters.
+
+    .OUTPUTS
+    The ZabbixHostGroup object created.
+
+    .EXAMPLE
+    PS> New-ZbxHostGroup "newgroupname1","newgroupname2"
+    groupid internal flags name
+    ------- -------- ----- ----
+         13 0        0     newgroupname1
+         14 0        0     newgroupname2
+
+    .EXAMPLE
+    PS> "newgroupname1","newgroupname2" | New-ZbxHostGroup 
+    groupid internal flags name
+    ------- -------- ----- ----
+         13 0        0     newgroupname1
+         14 0        0     newgroupname2
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -494,6 +787,25 @@ function New-HostGroup
 
 function Remove-HostGroup
 {
+    <#
+    .SYNOPSIS
+    Remove one or more host groups from Zabbix.
+    
+    .DESCRIPTION
+    Removal is immediate. 
+
+    .INPUTS
+    This function accepts ZabbixHostGroup objects or host group IDs from the pipe. Equivalent to using -HostGroupId parameter.
+
+    .OUTPUTS
+    The ID of the removed objects.
+
+    .EXAMPLE
+    Remove all groups
+    PS> Get-ZbxHostGroup | Remove-ZbxHostGroup
+    10084
+    10085
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -529,6 +841,39 @@ function Remove-HostGroup
 
 function Get-UserGroup
 {
+    <#
+    .SYNOPSIS
+    Retrieve and filter user groups.
+    
+    .DESCRIPTION
+    Query all user groups with basic filters, or get all user groups. 
+
+    .INPUTS
+    This function does not take pipe input.
+
+    .OUTPUTS
+    The ZabbixUserGroup objects corresponding to the filter.
+
+    .EXAMPLE
+    PS> Get-ZbxUserGroup "*admin*"
+    usrgrpid count name
+    -------- ----- ----
+           7 1     Zabbix administrators
+
+    .EXAMPLE
+    PS> Get-ZbxUserGroup
+    usrgrpid count name
+    -------- ----- ----
+           7 1     Zabbix administrators
+           8 4     Guests
+           9 0     Disabled
+
+    .EXAMPLE
+    PS> Get-ZbxUserGroup -Id 7
+    usrgrpid count name
+    -------- ----- ----
+           7 1     Zabbix administrators
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -557,6 +902,33 @@ function Get-UserGroup
 
 function New-UserGroup
 {
+    <#
+    .SYNOPSIS
+    Create a new user group.
+    
+    .DESCRIPTION
+    Create a new user group. 
+
+    .INPUTS
+    This function accepts a ZabbixUserGroup as pipe input, or any object which properties map the function parameters.
+
+    .OUTPUTS
+    The ZabbixUserGroup object created.
+
+    .EXAMPLE
+    PS> New-ZbxUserGroup "newgroupname1","newgroupname2"
+    usrgrpid count name
+    -------- ----- ----
+           7 1     newgroupname1
+           8 1     newgroupname2
+
+    .EXAMPLE
+    PS> "newgroupname1","newgroupname2" | New-ZbxUserGroup 
+    usrgrpid count name
+    -------- ----- ----
+           7 1     newgroupname1
+           8 1     newgroupname2
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -586,6 +958,25 @@ function New-UserGroup
 
 function Remove-UserGroup
 {
+    <#
+    .SYNOPSIS
+    Remove one or more user groups from Zabbix.
+    
+    .DESCRIPTION
+    Removal is immediate. 
+
+    .INPUTS
+    This function accepts ZabbixUserGroup objects or user group IDs from the pipe. Equivalent to using -UserGroupId parameter.
+
+    .OUTPUTS
+    The ID of the removed objects.
+
+    .EXAMPLE
+    Remove all groups
+    PS> Get-ZbxUserGroup | Remove-ZbxUserGroup
+    10084
+    10085
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -626,6 +1017,29 @@ Add-Type -TypeDefinition @"
 
 function Add-UserGroupPermission
 {
+    <#
+    .SYNOPSIS
+    Set permissions for user groups on host groups.
+    
+    .DESCRIPTION
+    Add, modify or remove permissions granted to one or more user groups on one or more host groups.
+    This is idempotent.
+    This is additional: existing permissions on host groups not mentionned in -HostGroup are not modified.
+
+    .INPUTS
+    This function accepts ZabbixUserGroup objects from the pipe. Equivalent to using -UserGroup parameter.
+
+    .OUTPUTS
+    The ID of the modified objects.
+
+    .EXAMPLE
+    PS> $usergroup11,$usergroup2 | Add-ZbxUserGroupPermission $hostgroup1,$hostgroup2 ReadWrite
+    10084
+    10085
+
+    .NOTES
+    There is no Remove-UserGroupPermission, as this method with -Permission Clear actually removes a permission.
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -633,11 +1047,11 @@ function Add-UserGroupPermission
         [Hashtable] $Session,
 
         [Parameter(Mandatory=$true, Position=0)][ValidateScript({ $_.groupid -ne $null})][ValidateNotNullOrEmpty()]
-        # The host or hostid to add to the hostgroup.
+        # The host group(s) to add to the user group.
         [PSCustomObject[]]$HostGroup,
 
         [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=2)][ValidateScript({ $_.usrgrpid -ne $null})][ValidateNotNullOrEmpty()]
-        # The Host is added to this list of one or more hostgroups.
+        # The user groups to add permissions to. Can come from the pipe.
         [PSCustomObject[]]$UserGroup,
 
         [Parameter(Mandatory=$true, Position=1)]
@@ -693,6 +1107,39 @@ function Add-UserGroupPermission
 
 function Get-User
 {
+    <#
+    .SYNOPSIS
+    Retrieve and filter users.
+    
+    .DESCRIPTION
+    Query all users with basic filters, or get all users. 
+
+    .INPUTS
+    This function does not take pipe input.
+
+    .OUTPUTS
+    The ZabbixUser objects corresponding to the filter.
+
+    .EXAMPLE
+    PS> Get-ZbxUser "marsu*"
+    userid alias           name                 surname              usrgrpsnames
+    ------ -----           ----                 -------              ------------
+         1 marsu1          Zabbix               Administrator        Zabbix administrators
+         2 marsu2                                                    Guests
+
+    .EXAMPLE
+    PS> Get-ZbxUser
+    userid alias           name                 surname              usrgrpsnames
+    ------ -----           ----                 -------              ------------
+         1 Admin           Zabbix               Administrator        Zabbix administrators
+         2 guest                                                     Guests
+
+    .EXAMPLE
+    PS> Get-ZbxUser -Id 1
+    userid alias           name                 surname              usrgrpsnames
+    ------ -----           ----                 -------              ------------
+         1 Admin           Zabbix               Administrator        Zabbix administrators
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -731,6 +1178,36 @@ Add-Type -TypeDefinition @"
 
 function New-User
 {
+    <#
+    .SYNOPSIS
+    Create a new user.
+    
+    .DESCRIPTION
+    Create a new user. 
+
+    .INPUTS
+    This function accepts a ZabbixUser as pipe input, or any object which properties map the function parameters.
+
+    .OUTPUTS
+    The ZabbixUser object created.
+
+    .EXAMPLE
+    PS> New-ZbxUser -Alias "login1" -name "marsu" -UserGroupId (get-zbxgroup "GROUPNAME*").id
+    userid alias           name                 surname              usrgrpsnames
+    ------ -----           ----                 -------              ------------
+        19 login1          marsu                                     GROUPNAME1,GROUPNAME2,GROUPNAME3
+
+    Create a user from scratch.
+
+    .EXAMPLE
+    PS> $u = New-ZbxUser -Alias "login1" -name "marsu" -UserGroupId (get-zbxgroup "GROUPNAME*").id
+    PS> $u | new-user -alias "login2"
+    userid alias           name                 surname              usrgrpsnames
+    ------ -----           ----                 -------              ------------
+        20 login2          marsu                                     GROUPNAME1,GROUPNAME2,GROUPNAME3
+
+    Copy a user.
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -797,6 +1274,25 @@ function New-User
 
 function Remove-User
 {
+    <#
+    .SYNOPSIS
+    Remove one or more users from Zabbix.
+    
+    .DESCRIPTION
+    Removal is immediate. 
+
+    .INPUTS
+    This function accepts ZabbixUser objects or user IDs from the pipe. Equivalent to using -UserId parameter.
+
+    .OUTPUTS
+    The ID of the removed objects.
+
+    .EXAMPLE
+    Remove all users
+    PS> Get-ZbxUser | Remove-ZbxUser
+    10084
+    10085
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -829,6 +1325,26 @@ function Remove-User
 #>
 function Add-UserGroupMembership
 {
+    <#
+    .SYNOPSIS
+    Make a user (or multiple users) member of one or more user groups. 
+    
+    .DESCRIPTION
+    This is additional: existing membership to other groups are not changed. 
+
+    .INPUTS
+    This function accepts ZabbixUser objects or user IDs from the pipe. Equivalent to using -UserId parameter.
+
+    .OUTPUTS
+    The ID of the changed objects.
+
+    .EXAMPLE
+    PS> Get-ZbxUser | Add-ZbxUserGroupMembership (Get-ZbxUserGroup group1),(Get-ZbxUserGroup group2)
+    10084
+    10085
+
+    Add two groups to all users.
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -904,6 +1420,26 @@ function Add-UserGroupMembership
 
 function Remove-UserGroupMembership
 {
+    <#
+    .SYNOPSIS
+    Remove a user (or multiple users) as a member of one or more user groups. 
+    
+    .DESCRIPTION
+    This is additional: existing membership to other groups are not changed. 
+
+    .INPUTS
+    This function accepts ZabbixUser objects or user IDs from the pipe. Equivalent to using -UserId parameter.
+
+    .OUTPUTS
+    The ID of the changed objects.
+
+    .EXAMPLE
+    PS> Get-ZbxUser | Remove-ZbxUserGroupMembership (Get-ZbxUserGroup group1),(Get-ZbxUserGroup group2)
+    10084
+    10085
+
+    Make sure no user is member of two specified groups.
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -988,6 +1524,29 @@ function Remove-UserGroupMembership
 
 function Get-Action
 {
+    <#
+    .SYNOPSIS
+    Retrieve and filter users.
+    
+    .DESCRIPTION
+    Query all actions with many filters, or get all actions. 
+
+    .INPUTS
+    This function does not take pipe input.
+
+    .OUTPUTS
+    The ZabbixAction objects corresponding to the filter.
+
+    .EXAMPLE
+    PS> Get-ZbxAction
+    Actionid Name                           def_shortdata        OperationsReadable
+    -------- ----                           -------------        ------------------
+           2 Auto discovery. Linux servers.                      {@{ConditionEvaluat...
+           3 Report problems to Zabbix a... {TRIGGER.STATUS}:... {@{ConditionEvaluat...
+           4 Report not supported items     {ITEM.STATE}: {HO... {@{ConditionEvaluat...
+           5 Report not supported low le... {LLDRULE.STATE}: ... {@{ConditionEvaluat...
+           6 Report unknown triggers        {TRIGGER.STATE}: ... {@{ConditionEvaluat...
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
@@ -1104,6 +1663,22 @@ function Get-ReadableOperation([Parameter(Mandatory=$True, ValueFromPipeline=$tr
 
 function Get-Proxy
 {
+    <#
+    .SYNOPSIS
+    Retrieve and filter proxies.
+    
+    .DESCRIPTION
+    Query all proxies with basic filters, or get all proxies. 
+
+    .INPUTS
+    This function does not take pipe input.
+
+    .OUTPUTS
+    The ZabbixProxy objects corresponding to the filter.
+
+    .EXAMPLE
+    PS> Get-ZbxProxy    
+    #>
     param
     (
         [Parameter(Mandatory=$False)]
