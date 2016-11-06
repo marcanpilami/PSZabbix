@@ -613,6 +613,79 @@ function Remove-UserGroup
 }
 
 
+Add-Type -TypeDefinition @"
+   public enum ZbxPermission
+   {
+      Clear = -1,
+      Deny = 0,
+      ReadOnly = 2,
+      ReadWrite = 3    
+   }
+"@
+
+
+function Add-UserGroupPermission
+{
+    param
+    (
+        [Parameter(Mandatory=$False)]
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
+        [Hashtable] $Session,
+
+        [Parameter(Mandatory=$true, Position=0)][ValidateScript({ $_.groupid -ne $null})][ValidateNotNullOrEmpty()]
+        # The host or hostid to add to the hostgroup.
+        [PSCustomObject[]]$HostGroups,
+
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=2)][ValidateScript({ $_.usrgrpid -ne $null})][ValidateNotNullOrEmpty()]
+        # The Host is added to this list of one or more hostgroups.
+        [PSCustomObject[]]$UserGroups,
+
+        [Parameter(Mandatory=$true, Position=1)]
+        # The permission to grant on the specified groups. "Clear" means any rule concerning these groups will be removed from the user groups.
+        [ZbxPermission] $Permission
+    )
+    begin
+    {
+        $newRights = if ($Permission -eq [ZbxPermission]::Clear) {@()} else {@($HostGroups |% {@{id = $_.groupid; permission = [int]$Permission}} )}
+        $HostGroupIds = @($HostGroups | select -ExpandProperty groupid) 
+        $usrgrpids = @()
+        $prms = @()
+    }
+    process
+    {
+        $usrgrpids += $UserGroups.usrgrpid
+    }
+    end
+    {
+        # Note: there is no usergroup.massremove verb in the API. And the usergroup.massadd method cannot update existing permissions.
+        # So we have to use the normal "update" verb. To do so we need to collect existing permissions and alter them.
+        # This is done in "end" and not in "process" so as to make a single GET API request to fetch existing rights - much faster.
+
+        if ($usrgrpids.Count -eq 0) { return }
+
+        foreach ($usergroup in (Get-UserGroup -Id $usrgrpids))
+        {
+            # First filter existing permissions - do not touch permissions which are not about the $HostGroups
+            $rights = @()
+            foreach($right in $usergroup.rights)
+            {
+                if (-not($right.id -in $HostGroupIds))
+                {
+                    $rights += $right
+                }
+            }
+            # Then add permissions for $HostGroups
+            $rights += $newRights
+
+            # Finaly create the update object
+            $prms += @{usrgrpid = $usergroup.usrgrpid; rights = $rights}
+        }
+
+        Invoke-ZabbixApi $session "usergroup.update" $prms | select -ExpandProperty usrgrpids
+    }   
+}
+
+
 
 ################################################################################
 ## USERS

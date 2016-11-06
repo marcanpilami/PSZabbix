@@ -1,7 +1,7 @@
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".").Replace(".ps1", ".psm1")
 
-$baseUrl = "http://tools/zabbix/api_jsonrpc.php"
+$global:baseUrl = "http://tools/zabbix/api_jsonrpc.php"
 $secpasswd = ConvertTo-SecureString "zabbix" -AsPlainText -Force
 $global:admin = New-Object System.Management.Automation.PSCredential ("Admin", $secpasswd)
 
@@ -11,7 +11,7 @@ $global:admin2 = New-Object System.Management.Automation.PSCredential ("Admin", 
 Import-Module $here/$sut -Force
 
 InModuleScope PSZabbix {    
-    $s = New-ApiSession $baseUrl $admin -silent
+    $s = New-ApiSession $baseUrl $global:admin -silent
     
     Describe "New-ApiSession" {
         $session = New-ApiSession $baseUrl $admin -silent
@@ -445,6 +445,51 @@ InModuleScope PSZabbix {
             $u1 = get-User pestertestrem3
             $u2 = get-User pestertestrem4
             $u1.usrgrps | select -ExpandProperty usrgrpid | Should Be @(8)
+        }
+    }
+
+    Describe "Add-UserGroupPermission" {
+        It "can add a Read permission to two piped user groups on two host groups" {
+            Get-Group "pester*" | remove-Group
+            Get-UserGroup "pester*" | remove-UserGroup
+
+            New-UserGroup -Name "pestertest1","pestertest2"
+            $ug1 = get-Usergroup pestertest1
+            $ug2 = get-Usergroup pestertest2
+
+            New-Group "pestertest1","pestertest2"
+            $hg1 = get-Group pestertest1
+            $hg2 = get-Group pestertest2
+
+            $ug1,$ug2 | Add-UserGroupPermission $hg1,$hg2 ReadWrite | should be @($ug1.usrgrpid, $ug2.usrgrpid)
+            $ug1 = get-Usergroup pestertest1
+            $ug2 = get-Usergroup pestertest2
+            $ug1.rights | select -ExpandProperty id | Should Be @($hg1.groupid, $hg2.groupid)
+            $ug1.rights | select -ExpandProperty permission | Should Be @(3, 3)
+        }
+        It "can alter and clear permissions on a host group without touching permissions on other groups" {
+            $ug1 = get-Usergroup pestertest1
+            $ug2 = get-Usergroup pestertest2
+            $hg1 = get-Group pestertest1
+            $hg2 = get-Group pestertest2
+
+            # Sanity check
+            $ug1.rights | select -ExpandProperty id | Should Be @($hg1.groupid, $hg2.groupid)
+            $ug1.rights | select -ExpandProperty permission | Should Be @(3, 3)
+
+            # Set HG1 RO.
+            $ug1,$ug2 | Add-UserGroupPermission $hg1 ReadOnly | should be @($ug1.usrgrpid, $ug2.usrgrpid)
+            $ug1 = get-Usergroup pestertest1
+            $ug2 = get-Usergroup pestertest2
+            $ug1.rights | select -ExpandProperty id | Should Be @($hg1.groupid, $hg2.groupid)
+            $ug1.rights | select -ExpandProperty permission | Should Be @(2, 3)
+
+            # Clear HG1
+            $ug1,$ug2 | Add-UserGroupPermission $hg1 Clear | should be @($ug1.usrgrpid, $ug2.usrgrpid)
+            $ug1 = get-Usergroup pestertest1
+            $ug2 = get-Usergroup pestertest2
+            $ug1.rights | select -ExpandProperty id | Should Be @($hg2.groupid)
+            $ug1.rights | select -ExpandProperty permission | Should Be @(3)
         }
     }
 }
