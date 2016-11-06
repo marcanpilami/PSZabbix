@@ -33,12 +33,12 @@ InModuleScope PSZabbix {
 
     Describe "New-Host" {
         It "can create an enabled host from explicit ID parameters" {
-            $h = New-Host -Name "pestertesthost$(Get-Random)" -GroupId 2 -TemplateId 10108 -Dns localhost
+            $h = New-Host -Name "pestertesthost$(Get-Random)" -HostGroupId 2 -TemplateId 10108 -Dns localhost
             $h | should not be $null
             $h.status | should be 0
         }
         It "can create an disabled host from explicit ID parameters" {
-            $h = New-Host -Name "pestertesthost$(Get-Random)" -GroupId 2 -TemplateId 10108 -Dns localhost -status disabled
+            $h = New-Host -Name "pestertesthost$(Get-Random)" -HostGroupId 2 -TemplateId 10108 -Dns localhost -status disabled
             $h | should not be $null
             $h.status | should be 1
         }
@@ -58,40 +58,40 @@ InModuleScope PSZabbix {
         }
         It "can filter by group membership (explicit parameter)" {
             $h = (Get-Host "pestertesthost*")[0]
-            (Get-Host -Id $h.hostid -GroupId 2).host | Should Be $h.host
+            (Get-Host -Id $h.hostid -HostGroupId 2).host | Should Be $h.host
         }
     }
 
     Describe "Remove-Host" {
         It "can delete from one explicit ID parameter" {
-            New-Host -Name "pestertesthostrem" -GroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+            New-Host -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
             $h = Get-Host pestertesthostrem
             remove-Host $h.hostid | should be $h.hostid
         }
         It "can delete from multiple explicit ID parameters" {
-            $h1 = New-Host -Name "pestertesthostrem" -GroupId 2 -TemplateId 10108 -Dns localhost
-            $h2 = New-Host -Name "pestertesthostrem2" -GroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+            $h1 = New-Host -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
+            $h2 = New-Host -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
             remove-Host $h1.hostid,$h2.hostid | should be @($h1.hostid, $h2.hostid)
         }
         It "can delete from multiple piped IDs" {
-            $h1 = New-Host -Name "pestertesthostrem" -GroupId 2 -TemplateId 10108 -Dns localhost
-            $h2 = New-Host -Name "pestertesthostrem2" -GroupId 2 -TemplateId 10108 -Dns localhost
+            $h1 = New-Host -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
+            $h2 = New-Host -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId 10108 -Dns localhost
             $h1.hostid,$h2.hostid | remove-Host | should be @($h1.hostid, $h2.hostid)
         }
         It "can delete from one piped object parameter" {
-            $h = New-Host -Name "pestertesthostrem" -GroupId 2 -TemplateId 10108 -Dns localhost
+            $h = New-Host -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
             $h | remove-Host | should be $h.hostid
         }
         It "can delete from multiple piped objects" {
-            $h1 = New-Host -Name "pestertesthostrem" -GroupId 2 -TemplateId 10108 -Dns localhost
-            $h2 = New-Host -Name "pestertesthostrem2" -GroupId 2 -TemplateId 10108 -Dns localhost
+            $h1 = New-Host -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
+            $h2 = New-Host -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId 10108 -Dns localhost
             $h1,$h2 | remove-Host | should be @($h1.hostid, $h2.hostid)
         }
     }
 
     Describe "Disable-Host"  {
-        New-Host -Name "pestertesthost1" -GroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-Host -Name "pestertesthost2" -GroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-Host -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-Host -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         $h1 = get-host pestertesthost1
         $h2 = get-host pestertesthost2
 
@@ -110,8 +110,8 @@ InModuleScope PSZabbix {
     }
 
     Describe "Enable-Host"  {
-        New-Host -Name "pestertesthost1" -GroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-Host -Name "pestertesthost2" -GroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-Host -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-Host -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         $h1 = get-host pestertesthost1
         $h2 = get-host pestertesthost2
 
@@ -130,34 +130,34 @@ InModuleScope PSZabbix {
     }
 
     Describe "Add-HostGroupMembership" {
-        New-Host -Name "pestertesthost1" -GroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-Host -Name "pestertesthost2" -GroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-Host -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-Host -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         $h1 = get-host pestertesthost1
         $h2 = get-host pestertesthost2
-        New-Group "pestertest1" -errorAction silentlycontinue
-        New-Group "pestertest2" -errorAction silentlycontinue
-        $g1 = get-Group pestertest1
-        $g2 = get-Group pestertest2
+        New-HostGroup "pestertest1" -errorAction silentlycontinue
+        New-HostGroup "pestertest2" -errorAction silentlycontinue
+        $g1 = get-HostGroup pestertest1
+        $g2 = get-HostGroup pestertest2
 
         It "adds a set of groups given as a parameter to multiple piped hosts" {
             $h1,$h2 | Add-HostGroupMembership $g1,$g2
-            (get-Group pestertest1).hosts.Count | should be 2
+            (get-HostGroup pestertest1).hosts.Count | should be 2
         }
     }
 
     Describe "Remove-HostGroupMembership" {
-        New-Host -Name "pestertesthost1" -GroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-Host -Name "pestertesthost2" -GroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-Host -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-Host -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         $h1 = get-host pestertesthost1
         $h2 = get-host pestertesthost2
-        New-Group "pestertest1" -errorAction silentlycontinue
-        New-Group "pestertest2" -errorAction silentlycontinue
-        $g1 = get-Group pestertest1
-        $g2 = get-Group pestertest2
+        New-HostGroup "pestertest1" -errorAction silentlycontinue
+        New-HostGroup "pestertest2" -errorAction silentlycontinue
+        $g1 = get-HostGroup pestertest1
+        $g2 = get-HostGroup pestertest2
 
         It "removes a set of groups given as a parameter to multiple piped hosts" {
             $h1,$h2 | Remove-HostGroupMembership $g1,$g2
-            (get-Group pestertest1).hosts.Count | should be 0
+            (get-HostGroup pestertest1).hosts.Count | should be 0
         }
     }
 
@@ -175,66 +175,66 @@ InModuleScope PSZabbix {
         }      
     }
 
-    Describe "New-Group" {
+    Describe "New-HostGroup" {
         It "creates a new group with explicit name parameter" {
-            $g = New-Group "pestertest$(Get-Random)","pestertest$(Get-Random)"
+            $g = New-HostGroup "pestertest$(Get-Random)","pestertest$(Get-Random)"
             $g.count | should be 2
             $g[0].name | should match "pestertest"
         }
         It "creates a new group with piped names" {
-            $g = "pestertest$(Get-Random)","pestertest$(Get-Random)" | New-Group
+            $g = "pestertest$(Get-Random)","pestertest$(Get-Random)" | New-HostGroup
             $g.count | should be 2
             $g[0].name | should match "pestertest"
         }
         It "creates a new group with piped objects" {
-            $g = (New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)"}),(New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)"}) | New-Group
+            $g = (New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)"}),(New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)"}) | New-HostGroup
             $g.count | should be 2
             $g[0].name | should match "pestertest"
         }
     }
 
-    Describe "Get-Group (host groups)" {
+    Describe "Get-HostGroup" {
         It "can return all groups" {
-            Get-Group | Should Not BeNullOrEmpty
+            Get-HostGroup | Should Not BeNullOrEmpty
         }
         It "can filter by name with wildcard (explicit parameter)" {
-            Get-Group "pestertest*" | Should Not BeNullOrEmpty
-            Get-Group "XXXXXXXXXXXXXX" | Should BeNullOrEmpty
+            Get-HostGroup "pestertest*" | Should Not BeNullOrEmpty
+            Get-HostGroup "XXXXXXXXXXXXXX" | Should BeNullOrEmpty
         }
         It "can filter by ID (explicit parameter)" {
-            $h = (Get-Group "pestertest*")[0]
-            (Get-Group -Id $h.groupid).name | Should Be $h.name
+            $h = (Get-HostGroup "pestertest*")[0]
+            (Get-HostGroup -Id $h.groupid).name | Should Be $h.name
         }      
     }
 
-    Describe "Remove-Group" {
+    Describe "Remove-HostGroup" {
         It "can delete from one explicit ID parameter" {
-            New-Group -Name "pestertestrem" -errorAction silentlycontinue
-            $h = Get-Group pestertestrem
-            remove-Group $h.groupid | should be $h.groupid
-            Get-Group pestertestrem | should Throw
+            New-HostGroup -Name "pestertestrem" -errorAction silentlycontinue
+            $h = Get-HostGroup pestertestrem
+            remove-HostGroup $h.groupid | should be $h.groupid
+            Get-HostGroup pestertestrem | should Throw
         }
         It "can delete from multiple explicit ID parameters" {
-            $h1 = New-Group -Name "pestertestrem"
-            $h2 =  New-Group -Name "pestertestrem2" -errorAction silentlycontinue
-            $h2 = get-group pestertestrem2
-            remove-group $h1.groupid,$h2.groupid | should be @($h1.groupid, $h2.groupid)
-            Get-Group pestertestrem | should Throw
-            Get-Group pestertestrem2 | should Throw
+            $h1 = New-HostGroup -Name "pestertestrem"
+            $h2 =  New-HostGroup -Name "pestertestrem2" -errorAction silentlycontinue
+            $h2 = get-Hostgroup pestertestrem2
+            remove-Hostgroup $h1.groupid,$h2.groupid | should be @($h1.groupid, $h2.groupid)
+            Get-HostGroup pestertestrem | should Throw
+            Get-HostGroup pestertestrem2 | should Throw
         }
         It "can delete from multiple piped IDs" {
-            $h1 = New-Group -Name "pestertestrem"
-            $h2 =  New-Group -Name "pestertestrem2"
-            $h1.groupid,$h2.groupid | remove-group | should be @($h1.groupid, $h2.groupid)
+            $h1 = New-HostGroup -Name "pestertestrem"
+            $h2 =  New-HostGroup -Name "pestertestrem2"
+            $h1.groupid,$h2.groupid | remove-Hostgroup | should be @($h1.groupid, $h2.groupid)
         }
         It "can delete from one piped object parameter" {
-            $h =  New-Group -Name "pestertestrem"
-            $h | remove-group | should be $h.groupid
+            $h =  New-HostGroup -Name "pestertestrem"
+            $h | remove-Hostgroup | should be $h.groupid
         }
         It "can delete from multiple piped objects" {
-            $h1 = New-Group -Name "pestertestrem"
-            $h2 =  New-Group -Name "pestertestrem2"
-            $h1,$h2 | remove-group | should be @($h1.groupid, $h2.groupid)
+            $h1 = New-HostGroup -Name "pestertestrem"
+            $h2 =  New-HostGroup -Name "pestertestrem2"
+            $h1,$h2 | remove-Hostgroup | should be @($h1.groupid, $h2.groupid)
         }
     }
 
@@ -450,16 +450,16 @@ InModuleScope PSZabbix {
 
     Describe "Add-UserGroupPermission" {
         It "can add a Read permission to two piped user groups on two host groups" {
-            Get-Group "pester*" | remove-Group
+            Get-HostGroup "pester*" | remove-HostGroup
             Get-UserGroup "pester*" | remove-UserGroup
 
             New-UserGroup -Name "pestertest1","pestertest2"
             $ug1 = get-Usergroup pestertest1
             $ug2 = get-Usergroup pestertest2
 
-            New-Group "pestertest1","pestertest2"
-            $hg1 = get-Group pestertest1
-            $hg2 = get-Group pestertest2
+            New-HostGroup "pestertest1","pestertest2"
+            $hg1 = get-HostGroup pestertest1
+            $hg2 = get-HostGroup pestertest2
 
             $ug1,$ug2 | Add-UserGroupPermission $hg1,$hg2 ReadWrite | should be @($ug1.usrgrpid, $ug2.usrgrpid)
             $ug1 = get-Usergroup pestertest1
@@ -470,8 +470,8 @@ InModuleScope PSZabbix {
         It "can alter and clear permissions on a host group without touching permissions on other groups" {
             $ug1 = get-Usergroup pestertest1
             $ug2 = get-Usergroup pestertest2
-            $hg1 = get-Group pestertest1
-            $hg2 = get-Group pestertest2
+            $hg1 = get-HostGroup pestertest1
+            $hg2 = get-HostGroup pestertest2
 
             # Sanity check
             $ug1.rights | select -ExpandProperty id | Should Be @($hg1.groupid, $hg2.groupid)

@@ -104,7 +104,7 @@ function Get-Host
         
         [Parameter(Mandatory=$False)]
         # Only retrieve items which belong to the given group(s).
-        [int[]] $GroupId,
+        [int[]] $HostGroupId,
 
         [Parameter(Mandatory=$False, Position=0)][Alias("HostName")]
         # Filter by hostname. Accepts wildcard.
@@ -112,7 +112,7 @@ function Get-Host
     )
     $prms = @{search= @{}; searchWildcardsEnabled = 1; selectInterfaces = 1; selectParentTemplates = 1}
     if ($Id.Length -gt 0) {$prms["hostids"] = $Id}
-    if ($GroupId.Length -gt 0) {$prms["groupids"] = $GroupId}
+    if ($HostGroupId.Length -gt 0) {$prms["groupids"] = $GroupId}
     if ($Name -ne $null) {$prms["search"]["name"] = $Name}
     Invoke-ZabbixApi $session "host.get" $prms |% {$_.status = [ZbxStatus]$_.status; $_.hostid = [int]$_.hostid; $_.PSTypeNames.Insert(0,"ZabbixHost"); $_}
 }
@@ -140,11 +140,11 @@ function New-Host
 
         [parameter(Mandatory=$true, ParameterSetName="Ids")]
         # The groups the new host should belong to.
-        [int[]] $GroupId,
+        [int[]] $HostGroupId,
 
         [parameter(Mandatory=$true, ParameterSetName="Objects")]
         # The groups the new host should belong to.
-        [PSCustomObject[]] $Group,
+        [PSCustomObject[]] $HostGroup,
 
         [parameter(Mandatory=$true, ParameterSetName="Ids")]
         # The templates the new host should belong to.
@@ -174,10 +174,10 @@ function New-Host
     $isIp = 0
     try { [ipaddress]$Dns; $isIp = 1} catch {}
 
-    if ($groupid -ne $null)
+    if ($Hostgroupid -ne $null)
     {
-        $group = @()
-        $groupId |% { $group += @{"groupid" = $_} }
+        $HostGroup = @()
+        $HostGroupId |% { $HostGroup += @{"groupid" = $_} }
     }
     if ($TemplateId -ne $null)
     {
@@ -197,7 +197,7 @@ function New-Host
             ip = if ($isIp -eq 0) { "" } else { $Dns }
             port = $Port
         })
-        groups = $Group
+        groups = $HostGroup
         templates = $Template
         inventory_mode = 0
         inventory = $Inventory
@@ -302,22 +302,22 @@ function Add-HostGroupMembership
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=1)][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixHost'})][Alias("Host")][ValidateNotNullOrEmpty()]
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=1)][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixHost'})][ValidateNotNullOrEmpty()]
         # The host or hostid to add to the hostgroup.
-        [PSCustomObject[]]$Hosts,
+        [PSCustomObject[]]$Host,
 
         [Parameter(Mandatory=$true, Position=0)][ValidateNotNullOrEmpty()]
         # The Host is added to this list of one or more hostgroups.
-        [PSCustomObject[]]$Groups
+        [PSCustomObject[]]$HostGroup
     )
     begin
     {
-        $grpids = @($Groups |% {@{groupid = $_.groupid}} )
+        $grpids = @($HostGroup |% {@{groupid = $_.groupid}} )
         $prms = @{hosts = @(); groups = $grpids}
     }
     process
     {
-        $prms["hosts"] += $Hosts.hostid
+        $prms["hosts"] += $Host.hostid
     }
     end
     {
@@ -334,22 +334,22 @@ function Remove-HostGroupMembership
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=1)][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixHost'})][Alias("Host")][ValidateNotNullOrEmpty()]
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=1)][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixHost'})][ValidateNotNullOrEmpty()]
         # The host or hostid to remove from the hostgroup(s).
-        [PSCustomObject[]]$Hosts,
+        [PSCustomObject[]]$Host,
 
         [Parameter(Mandatory=$true, Position=0)][ValidateNotNullOrEmpty()][ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixGroup'})]
         # The Host is removed from this list of one or more hostgroups.
-        [PSCustomObject[]]$Groups
+        [PSCustomObject[]]$HostGroup
     )
     begin
     {
-        $grpids = @($Groups |% {$_.groupid} )
+        $grpids = @($HostGroup |% {$_.groupid} )
         $prms = @{hostids = @(); groupids = $grpids}
     }
     process
     {
-        $prms["hostids"] += $Hosts.hostid
+        $prms["hostids"] += $Host.hostid
     }
     end
     {
@@ -431,11 +431,11 @@ function Remove-Template
 
 
 ################################################################################
-## GROUPS (hostgroups)
+## HOST GROUPS
 ################################################################################
 
 #region host groups
-function Get-Group
+function Get-HostGroup
 {
     param
     (
@@ -463,7 +463,7 @@ function Get-Group
 }
 
 
-function New-Group
+function New-HostGroup
 {
     param
     (
@@ -487,12 +487,12 @@ function New-Group
     {
         if ($prms.Count -eq 0) { return }
         $r = Invoke-ZabbixApi $session "hostgroup.create" $prms
-        Get-Group -Session $s -Id $r.groupids
+        Get-HostGroup -Session $s -Id $r.groupids
     }
 }
 
 
-function Remove-Group
+function Remove-HostGroup
 {
     param
     (
@@ -500,9 +500,9 @@ function Remove-Group
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [parameter(Mandatory=$true, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true, Position=0)][ValidateNotNullOrEmpty()][Alias("Id", "Group")]
+        [parameter(Mandatory=$true, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true, Position=0)][ValidateNotNullOrEmpty()][Alias("Id", "GroupId")]
         # ID of one or more groups to remove. You can also pipe in objects with an "ID" of "groupid" property.
-        [int[]]$GroupId
+        [int[]]$HostGroupId
     )
 
     begin
@@ -511,7 +511,7 @@ function Remove-Group
     }
     process
     {
-        $prms += $GroupId 
+        $prms += $HostGroupId 
     }
     end
     {
@@ -634,11 +634,11 @@ function Add-UserGroupPermission
 
         [Parameter(Mandatory=$true, Position=0)][ValidateScript({ $_.groupid -ne $null})][ValidateNotNullOrEmpty()]
         # The host or hostid to add to the hostgroup.
-        [PSCustomObject[]]$HostGroups,
+        [PSCustomObject[]]$HostGroup,
 
         [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=2)][ValidateScript({ $_.usrgrpid -ne $null})][ValidateNotNullOrEmpty()]
         # The Host is added to this list of one or more hostgroups.
-        [PSCustomObject[]]$UserGroups,
+        [PSCustomObject[]]$UserGroup,
 
         [Parameter(Mandatory=$true, Position=1)]
         # The permission to grant on the specified groups. "Clear" means any rule concerning these groups will be removed from the user groups.
@@ -646,14 +646,14 @@ function Add-UserGroupPermission
     )
     begin
     {
-        $newRights = if ($Permission -eq [ZbxPermission]::Clear) {@()} else {@($HostGroups |% {@{id = $_.groupid; permission = [int]$Permission}} )}
-        $HostGroupIds = @($HostGroups | select -ExpandProperty groupid) 
+        $newRights = if ($Permission -eq [ZbxPermission]::Clear) {@()} else {@($HostGroup |% {@{id = $_.groupid; permission = [int]$Permission}} )}
+        $HostGroupIds = @($HostGroup | select -ExpandProperty groupid) 
         $usrgrpids = @()
         $prms = @()
     }
     process
     {
-        $usrgrpids += $UserGroups.usrgrpid
+        $usrgrpids += $UserGroup.usrgrpid
     }
     end
     {
@@ -704,8 +704,8 @@ function Get-User
         [int[]] $Id,
         
         [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true )][Alias("UsergrpId")]
-        # Only retrieve groups which contain the given users
-        [int[]] $GroupId,
+        # Only retrieve users which belong to these user groups
+        [int[]] $UserGroupId,
 
         [Parameter(Mandatory=$False, Position=0)][Alias("UserName")]
         # Filter by name. Accepts wildcard.
@@ -713,7 +713,7 @@ function Get-User
     )
     $prms = @{selectUsrgrps = "extend"; getAccess = 1; search= @{}; searchWildcardsEnabled = 1}
     if ($Id.Length -gt 0) {$prms["userids"] = $Id}
-    if ($GroupId.Length -gt 0) {$prms["usrgrpids"] = $GroupId}
+    if ($UserGroupId.Length -gt 0) {$prms["usrgrpids"] = $UserGroupId}
     if ($Name -ne $null) {$prms["search"]["alias"] = $Name}
     Invoke-ZabbixApi $session "user.get"  $prms |% {$_.userid = [int]$_.userid; $_.PSTypeNames.Insert(0,"ZabbixUser"); $_}
 }
@@ -1004,7 +1004,7 @@ function Get-Action
 
         [Parameter(Mandatory=$False)]
         # Only retrieve actions which use the following groups in their conditions
-        [int[]] $GroupId,
+        [int[]] $HostGroupId,
 
         [Parameter(Mandatory=$False)]
         # Only retrieve actions which use the following triggers in their conditions
@@ -1025,7 +1025,7 @@ function Get-Action
     $prms = @{searchWildcardsEnabled=1; selectConditions = "extend"; selectOperations = "extend"; search= @{}}
     if ($Id.Length -gt 0) {$prms["actionids"] = $Id}
     if ($HostId.Length -gt 0) {$prms["hostids"] = $HostId}
-    if ($GroupId.Length -gt 0) {$prms["groupids"] = $GroupId}
+    if ($HostGroupId.Length -gt 0) {$prms["groupids"] = $HostGroupId}
     if ($TriggerId.Length -gt 0) {$prms["triggerids"] = $TriggerId}
     if ($UserId.Length -gt 0) {$prms["userids"] = $UserId}
     if ($UserGroupId.Length -gt 0) {$prms["usrgrpids"] = $UserGroupId}
