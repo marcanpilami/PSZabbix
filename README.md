@@ -23,9 +23,15 @@ also work and other versions but without any guarantee.
 
 # Installation
 
+The module is published on the PowerShell gallery, so download and installation is simply (powershell 5+):
+
 ```
 PS> Install-Module PSZabbix -scope CurrentUser
 ```
+
+If using an older version of PowerShell, you must download the release from the releases page, unzip it 
+and put the PSZabbix folder inside MyDocuments/WindowsPowerShell/Modules or any other folder in the module 
+search path.
 
 # Usage
 
@@ -78,5 +84,5 @@ Function        Remove-ZbxUserGroupMembership                      1.0.0      PS
 
 # Misc
 
-The module is tested with Pester. If you want to run the test you will have to modify the login chain inside the test file
-and have a working Zabbix server.
+The module is tested with Pester. If you want to run the tests you will have to modify the login chain inside the test file
+and have a working Zabbix server to test against.
