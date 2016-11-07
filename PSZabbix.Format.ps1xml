@@ -246,7 +246,10 @@
                         <Alignment>left</Alignment>
                     </TableColumnHeader>
                     <TableColumnHeader>
-                        <Width>30</Width>
+                        <Width>12</Width>
+                        <Alignment>left</Alignment>
+                    </TableColumnHeader>
+                    <TableColumnHeader>
                         <Alignment>left</Alignment>
                     </TableColumnHeader>
                 </TableHeaders>
@@ -258,6 +261,9 @@
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>count</PropertyName>
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>users_status</PropertyName>
                             </TableColumnItem>
                              <TableColumnItem>
                                 <PropertyName>name</PropertyName>

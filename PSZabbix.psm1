@@ -901,7 +901,7 @@ function Get-UserGroup
     if ($Id.Length -gt 0) {$prms["usrgrpids"] = $Id}
     if ($UserId.Length -gt 0) {$prms["userids"] = $UserId}
     if ($Name -ne $null) {$prms["search"]["name"] = $Name}
-    Invoke-ZabbixApi $session "usergroup.get"  $prms |% {$_.usrgrpid = [int]$_.usrgrpid; $_.PSTypeNames.Insert(0,"ZabbixUserGroup"); $_}
+    Invoke-ZabbixApi $session "usergroup.get"  $prms |% {$_.usrgrpid = [int]$_.usrgrpid; $_.users_status = [ZbxStatus]$_.users_status; $_.debug_mode = [ZbxStatus]$_.debug_mode; $_.PSTypeNames.Insert(0,"ZabbixUserGroup"); $_}
 }
 
 
@@ -1324,10 +1324,7 @@ function Remove-User
     }    
 }
 
-<#
-    .notes
-    Very slow when modifying many users as there is no "mass update" API for this operation in Zabbix.
-#>
+
 function Add-UserGroupMembership
 {
     <#
@@ -1349,6 +1346,9 @@ function Add-UserGroupMembership
     10085
 
     Add two groups to all users.
+
+    .NOTES
+    Very slow when modifying many users as there is no "mass update" API for this operation in Zabbix.
     #>
     param
     (
