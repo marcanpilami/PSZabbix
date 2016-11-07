@@ -1703,3 +1703,125 @@ function Get-Proxy
     if ($Name -ne $null) {$prms["search"]["name"] = $Name}
     Invoke-ZabbixApi $session "proxy.get"  $prms |% {$_.proxyid = [int]$_.proxyid; $_.PSTypeNames.Insert(0,"ZabbixProxy"); $_}
 }
+
+
+
+################################################################################
+## MEDIA
+################################################################################
+
+function Get-Media
+{
+    <#
+    .SYNOPSIS
+    Retrieve and filter media (the definition of how a media type should be used for a user).
+    
+    .DESCRIPTION
+    Query all media with basic filters, or get all media. 
+
+    .INPUTS
+    This function does not take pipe input.
+
+    .OUTPUTS
+    The ZabbixMedia objects corresponding to the filter.
+
+    .EXAMPLE
+    PS> Get-ZbxMedia -Status Enabled
+    mediaid  userid mediatypeid active
+    -------  ------ ----------- ------
+          1       3           1 Enabled
+    #>
+    param
+    (
+        [Parameter(Mandatory=$False)]
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
+        [Hashtable] $Session,
+
+        [Parameter(Mandatory=$False)][Alias("MediaId")]
+        # Only retrieve the media with the given ID.
+        [int[]] $Id,
+        
+        [Parameter(Mandatory=$False)]
+        # Only retrieve media which are used by the users in the given group(s).
+        [int[]] $UserGroupId,
+
+        [Parameter(Mandatory=$False)]
+        # Only retrieve media which are used by the given user(s).
+        [int[]] $UserId,
+
+        [Parameter(Mandatory=$False)]
+        # Only retrieve media which use the give media type(s).
+        [int[]] $MediaTypeId,
+
+        [Parameter(Mandatory=$False)]
+        # Only retrieve media which are in the given status.
+        [ZbxStatus] $Status
+    )
+    $prms = @{}
+    if ($Id.Length -gt 0) {$prms["mediaids"] = $Id}
+    if ($UserGroupId.Length -gt 0) {$prms["usrgrpids"] = $UserGroupId}
+    if ($UserId.Length -gt 0) {$prms["userids"] = $UserId}
+    if ($MediaTypeId.Length -gt 0) {$prms["mediatypeids"] = $MediaTypeId}
+    if ($Status -ne $null) {$prms["filter"] = @{"active" = [int]$Status}}
+    Invoke-ZabbixApi $session "usermedia.get" $prms |% {$_.mediaid = [int]$_.mediaid; $_.active=[ZbxStatus]$_.active; $_.PSTypeNames.Insert(0,"ZabbixMedia"); $_}
+}
+
+
+Add-Type -TypeDefinition @"
+   public enum ZbxMediaTypeType
+   {
+      Email = 0,
+      Script = 1,
+      SMS = 2,
+      Jabber = 3,
+      EzTexting = 100 
+   }
+"@
+
+function Get-MediaType
+{
+    <#
+    .SYNOPSIS
+    Retrieve and filter media types
+    
+    .DESCRIPTION
+    Query all media types with basic filters, or get all media types. 
+
+    .INPUTS
+    This function does not take pipe input.
+
+    .OUTPUTS
+    The ZabbixMediaType objects corresponding to the filter.
+
+    .EXAMPLE
+    PS> Get-ZbxMediaType -Type Email
+    mediatypeid type                                 description
+    ----------- ----                                 -----------
+              1 Email                                Email
+    #>
+    param
+    (
+        [Parameter(Mandatory=$False)]
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
+        [Hashtable] $Session,
+
+        [Parameter(Mandatory=$False)][Alias("MediaTypeId")]
+        # Only retrieve the media type with the given ID.
+        [int[]] $Id,
+        
+        [Parameter(Mandatory=$False, Position=0)][Alias("Description")]
+        # Filter by name. Accepts wildcard.
+        [string] $Name,
+
+        [Parameter(Mandatory=$False, Position=0)][Alias("MediaTypeType")]
+        # Filter by type (email, SMS...)
+        [ZbxMediaTypeType] $Type
+    )
+    $prms = @{search= @{}; filter=@{}; searchWildcardsEnabled=1; selectUsers = 0}
+    if ($Id.Length -gt 0) {$prms["mediatypeids"] = $Id}
+    if ($Name -ne $null) {$prms["search"]["description"] = $Name}
+    if ($Type -ne $null) {$prms["filter"]["type"] = [int]$Type}
+
+    Invoke-ZabbixApi $session "mediatype.get" $prms |% {$_.mediatypeid = [int]$_.mediatypeid; $_.type = [ZbxMediaTypeType]$_.type; $_.status = [ZbxStatus]$_.status; $_.PSTypeNames.Insert(0,"ZabbixMediaType"); $_}
+}
+
