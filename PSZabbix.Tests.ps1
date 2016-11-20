@@ -495,4 +495,48 @@ InModuleScope PSZabbix {
             $ug1.rights | select -ExpandProperty permission | Should Be @(3)
         }
     }
+
+    Describe "Get-MediaType" {
+        It "can return all types" {
+            Get-MediaType | Should Not BeNullOrEmpty
+        }
+        It "can filter by technical media type" {
+            Get-MediaType -type Email | Should Not BeNullOrEmpty
+            Get-MediaType -type EzTexting | Should BeNullOrEmpty
+        }         
+    }
+
+    Describe "Add-UserMail" {
+        It "can add a mail to a user without mail" {
+            $u = @(New-User -Alias "pestertestmedia$(get-random)" -name "marsu" -UserGroupId 8)[0]
+            $u | Add-UserMail toto1@company.com | Should Not BeNullOrEmpty
+        }
+        It "can add a mail with specific severity filter" {
+            $u = @(New-User -Alias "pestertestmedia$(get-random)" -name "marsu" -UserGroupId 8)[0]
+            $u | Add-UserMail toto1@company.com Information,Warning | Should Not BeNullOrEmpty
+        }
+    }
+
+    Describe "Get-Media" {
+        It "can return all media" {
+            Get-Media |  Should Not BeNullOrEmpty
+        }
+
+        It "can filter by media type" {
+            Get-Media -MediaTypeId (Get-MediaType -Type email).mediatypeid |  Should Not BeNullOrEmpty
+        }
+
+        It "can filter actions used by certain users" {
+            Get-Media -UserId @(Get-User -Name "pestertestmedia*")[0].userid |  Should Not BeNullOrEmpty
+            Get-Media -UserId @(Get-User -Name "Admin")[0].userid |  Should BeNullOrEmpty
+        }
+    }
+
+    Describe "Remove-Media" {
+        It "can remove piped media" {
+            Get-Media | Remove-Media |  Should Not BeNullOrEmpty
+            Get-Media |  Should BeNullOrEmpty
+            Get-User -Name "pestertestmedia*" | Remove-User > $null
+        }
+    }
 }

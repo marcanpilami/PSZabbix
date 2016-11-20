@@ -1258,12 +1258,31 @@ function New-User
         [ValidateNotNullOrEmpty()][ValidateScript({ $_.usrgrpid -ne $null})]
         [Alias("UsrGrps")]
         # The groups the new user belongs to.
-        [object[]] $UserGroup
+        [object[]] $UserGroup,
+
+        [Parameter(Mandatory=$False)]
+        # Mail adress to send alerts to
+        [string] $MailAddress,
+
+        [Parameter(Mandatory=$False)]
+        # A severity mask for alerts. Only used if $MailAdress is specified. Default is Disaster,High
+        [ZbxSeverity] $AlertOn = [ZbxSeverity]::Disaster -bor [ZbxSeverity]::High
     )
 
     begin
     {
         $prms = @()
+        $media = @()
+        if ($MailAddress -ne $null) 
+        {
+            $media += @{
+                mediatypeid = @(Get-MediaType -Type email)[0].mediatypeid
+                sendto = $MailAddress
+                active = [int][ZbxStatus]::Enabled
+                severity = $AlertOn
+                period = "1-7,00:00-24:00"
+            }
+        }
     }
     process
     {
@@ -1289,6 +1308,7 @@ function New-User
             type = [int]$UserType
             passwd = if ($Password -ne $null) {$Password} else { "" + (Get-Random -Maximum ([long]::MaxValue)) }
             usrgrps = $usergrps
+            user_medias = $media
         }
     }
     end
@@ -1733,6 +1753,33 @@ function Get-Proxy
 ## MEDIA
 ################################################################################
 
+Add-Type -TypeDefinition @"
+   [System.Flags]
+   public enum ZbxSeverity
+   {
+      None = 0,
+      NotClassified = 1,
+      Information = 2,
+      Warning = 4,
+      Average = 8,
+      High = 16,
+      Disaster = 32  
+   }
+"@
+
+
+Add-Type -TypeDefinition @"
+   public enum ZbxMediaTypeType
+   {
+      Email = 0,
+      Script = 1,
+      SMS = 2,
+      Jabber = 3,
+      EzTexting = 100 
+   }
+"@
+
+
 function Get-Media
 {
     <#
@@ -1787,20 +1834,9 @@ function Get-Media
     if ($UserId.Length -gt 0) {$prms["userids"] = $UserId}
     if ($MediaTypeId.Length -gt 0) {$prms["mediatypeids"] = $MediaTypeId}
     if ($Status -ne $null) {$prms["filter"] = @{"active" = [int]$Status}}
-    Invoke-ZabbixApi $session "usermedia.get" $prms |% {$_.mediaid = [int]$_.mediaid; $_.active=[ZbxStatus]$_.active; $_.PSTypeNames.Insert(0,"ZabbixMedia"); $_}
+    Invoke-ZabbixApi $session "usermedia.get" $prms |% {$_.severity = [ZbxSeverity]$_.severity; $_.mediaid = [int]$_.mediaid; $_.active=[ZbxStatus]$_.active; $_.PSTypeNames.Insert(0,"ZabbixMedia"); $_}
 }
 
-
-Add-Type -TypeDefinition @"
-   public enum ZbxMediaTypeType
-   {
-      Email = 0,
-      Script = 1,
-      SMS = 2,
-      Jabber = 3,
-      EzTexting = 100 
-   }
-"@
 
 function Get-MediaType
 {
@@ -1849,3 +1885,106 @@ function Get-MediaType
     Invoke-ZabbixApi $session "mediatype.get" $prms |% {$_.mediatypeid = [int]$_.mediatypeid; $_.type = [ZbxMediaTypeType]$_.type; $_.status = [ZbxStatus]$_.status; $_.PSTypeNames.Insert(0,"ZabbixMediaType"); $_}
 }
 
+
+function Add-UserMail
+{
+    <#
+    .SYNOPSIS
+    Add a new mail type media to one or more users.
+    
+    .DESCRIPTION
+    Add a new mail type media to one or more users. Purely an ADD cmdlet - if there is already a mail media for the given user, it won't be
+    modified and the user will have multiple mail media.
+
+    .INPUTS
+    This function takes ZbxUser objects or integer ID as pipeline input (equivalent to using -UserId parameter)
+
+    .OUTPUTS
+    The ID of the new media object(s).
+
+    .EXAMPLE
+    PS> Get-ZbxUser -Name toto1 | Add-ZbxUserMail toto1@company.com
+    12
+    #>
+    param
+    (
+        [Parameter(Mandatory=$False)]
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
+        [Hashtable] $Session,
+
+        [Parameter(Mandatory=$True, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true, Position=2)][ValidateNotNullOrEmpty()][Alias("User", "Id")]
+        # One or more users to modify. Either user objects (with a userid property) or directly IDs.
+        [int[]] $UserId,
+        
+        [Parameter(Mandatory=$True, Position=0)]
+        # Mail adress to send the alerts to
+        [string] $SendTo,
+
+        [Parameter(Mandatory=$False, Position=1)]
+        # A severity mask. Default is Disaster,High
+        [ZbxSeverity] $Severity = [ZbxSeverity]::Disaster -bor [ZbxSeverity]::High
+    )
+
+    Begin
+    {
+        $users = @()
+        $type = @(Get-MediaType -session $Session -type Email)[0]
+        $media = @{mediatypeid = $type.mediatypeid; sendto = $SendTo; active = [int][ZbxStatus]::Enabled; severity = [int]$Severity; period = "1-7,00:00-24:00"}
+    }
+    process
+    {
+        $UserId |% {$users += @{userid = $_}} 
+    }
+    end
+    {
+        if ($users.Count -eq 0) { return }
+        Invoke-ZabbixApi $session "user.addmedia"  @{users = $users; medias = $media} | select -ExpandProperty mediaids
+    } 
+}
+
+function Remove-Media
+{
+    <#
+    .SYNOPSIS
+    Remove one or more user media from Zabbix.
+    
+    .DESCRIPTION
+    Removal is immediate. 
+
+    .INPUTS
+    This function accepts ZabbixMedia objects or media IDs from the pipe. Equivalent to using -MediaId parameter.
+
+    .OUTPUTS
+    The ID of the removed objects.
+
+    .EXAMPLE
+    Remove all users
+    PS> Get-ZbxMedia | Remove-ZbxMedia
+    10084
+    10085
+    #>
+    param
+    (
+        [Parameter(Mandatory=$False)]
+        # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
+        [Hashtable] $Session,
+
+        [Parameter(Mandatory=$True, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true, Position=0)][ValidateNotNullOrEmpty()][Alias("Media", "Id")]
+        # One or more media to remove. Either user objects (with a mediaid property) or directly IDs.
+        [int[]] $MediaId
+    )
+
+    Begin
+    {
+        $prms = @()
+    }
+    process
+    {
+        $prms += $MediaId 
+    }
+    end
+    {
+        if ($prms.Count -eq 0) { return }
+        Invoke-ZabbixApi $session "user.deletemedia"  $prms | select -ExpandProperty mediaids
+    }    
+}

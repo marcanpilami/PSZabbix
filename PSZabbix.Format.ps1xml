@@ -371,6 +371,9 @@
                         <Width>11</Width>
                         <Alignment>left</Alignment>
                     </TableColumnHeader>
+                    <TableColumnHeader>
+                        <Alignment>left</Alignment>
+                    </TableColumnHeader>
                 </TableHeaders>
                 <TableRowEntries>
                     <TableRowEntry>
@@ -386,7 +389,10 @@
                             </TableColumnItem>
                             <TableColumnItem>
                                 <PropertyName>active</PropertyName>
-                            </TableColumnItem>                       
+                            </TableColumnItem>
+                            <TableColumnItem>
+                                <PropertyName>severity</PropertyName>
+                            </TableColumnItem>         
                         </TableColumnItems>
                     </TableRowEntry>
                 </TableRowEntries>
