@@ -52,18 +52,23 @@ hostid host                    name                                        statu
  10105 Agent Mongo 1           Agent Mongo 1                               Enabled
 ...
 
-# List of cmdlets (the Zbx prefix can be changed on import):
+# List of cmdlets (the Zbx prefix can be changed on import if needed):
 PS> Get-Command -Module PSZabbix
 CommandType     Name                                               Version    Source
 -----------     ----                                               -------    ------
 Function        Add-ZbxHostGroupMembership                         1.0.0      PSZabbix
 Function        Add-ZbxUserGroupMembership                         1.0.0      PSZabbix
 Function        Add-ZbxUserGroupPermission                         1.0.0      PSZabbix
+Function        Add-ZbxUserMail                                    1.0.0      PSZabbix
 Function        Disable-ZbxHost                                    1.0.0      PSZabbix
+Function        Disable-ZbxUserGroup                               1.0.0      PSZabbix
 Function        Enable-ZbxHost                                     1.0.0      PSZabbix
+Function        Enable-ZbxUserGroup                                1.0.0      PSZabbix
 Function        Get-ZbxAction                                      1.0.0      PSZabbix
 Function        Get-ZbxHost                                        1.0.0      PSZabbix
 Function        Get-ZbxHostGroup                                   1.0.0      PSZabbix
+Function        Get-ZbxMedia                                       1.0.0      PSZabbix
+Function        Get-ZbxMediaType                                   1.0.0      PSZabbix
 Function        Get-ZbxProxy                                       1.0.0      PSZabbix
 Function        Get-ZbxTemplate                                    1.0.0      PSZabbix
 Function        Get-ZbxUser                                        1.0.0      PSZabbix
@@ -76,6 +81,7 @@ Function        New-ZbxUserGroup                                   1.0.0      PS
 Function        Remove-ZbxHost                                     1.0.0      PSZabbix
 Function        Remove-ZbxHostGroup                                1.0.0      PSZabbix
 Function        Remove-ZbxHostGroupMembership                      1.0.0      PSZabbix
+Function        Remove-ZbxMedia                                    1.0.0      PSZabbix
 Function        Remove-ZbxTemplate                                 1.0.0      PSZabbix
 Function        Remove-ZbxUser                                     1.0.0      PSZabbix
 Function        Remove-ZbxUserGroup                                1.0.0      PSZabbix
