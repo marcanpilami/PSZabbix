@@ -539,4 +539,24 @@ InModuleScope PSZabbix {
             Get-User -Name "pestertestmedia*" | Remove-User > $null
         }
     }
+
+    Describe "Disable-UserGroup"  {
+        New-UserGroup -Name "pestertestenable1" -errorAction silentlycontinue
+        $h1 = get-usergroup pestertestenable1
+
+        It "can disable multiple piped objects" {
+            $h1 | Disable-UserGroup | should be @($h1.usrgrpid)
+            [int](get-usergroup pestertestenable1).users_status | should be 1
+        }
+    }
+
+    Describe "Enable-UserGroup"  {
+        New-UserGroup -Name "pestertestenable1" -errorAction silentlycontinue
+        $h1 = get-usergroup pestertestenable1
+
+        It "can enable multiple piped objects" {
+            $h1 | Enable-UserGroup | should be @($h1.usrgrpid)
+            [int](get-usergroup pestertestenable1).users_status | should be 0
+        }
+    }
 }

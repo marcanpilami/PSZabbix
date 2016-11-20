@@ -52,7 +52,7 @@ hostid host                    name                                        statu
  10105 Agent Mongo 1           Agent Mongo 1                               Enabled
 ...
 
-# List of cmdlets:
+# List of cmdlets (the Zbx prefix can be changed on import):
 PS> Get-Command -Module PSZabbix
 CommandType     Name                                               Version    Source
 -----------     ----                                               -------    ------
