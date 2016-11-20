@@ -274,7 +274,7 @@ function New-Host
     if ($TemplateId -ne $null)
     {
         $Template = @()
-        $TemplateId |% { $template += @{"templateid" = $_} }
+        $TemplateId |% { $Template += @{"templateid" = $_} }
     }
 
     $prms = @{
@@ -1213,20 +1213,31 @@ function New-User
 
     Copy a user.
     #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingUserNameAndPassWordParams", "")]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingPlainTextForPassword", "")]
     param
     (
         [Parameter(Mandatory=$False)]
         # A valid Zabbix API session retrieved with New-ZbxApiSession. If not given, the latest opened session will be used, which should be enough in most cases.
         [Hashtable] $Session,
 
-        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true)][Alias("Login")]
+        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName = "login_withgroupid")]
+        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName = "login_withgroupobject")]
+        [Alias("Login")]
         # Login of the new user. Must be unique.
         [string] $Alias,
 
-        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true)][Alias("Pwd", "passwd")]
+        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true, ParameterSetName = "login_withgroupid")]
+        [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true, ParameterSetName = "login_withgroupobject")]
+        [Alias("Pwd", "passwd")]
         # Password of the new user. If not specified, a long random string is used (useful if authenticated 
         # against a LDAP, as in that case the internal Zabbix password is not used).
         [string] $Password = $null,
+
+        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName = "pscred_withgroupid")]
+        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName = "pscred_withgroupobject")]
+        # A Credential (from Get-Credential or other source) object containing both login and password for the new user.
+        [PSCredential][System.Management.Automation.Credential()] $Credential,
 
         [Parameter(Mandatory=$False, ValueFromPipelineByPropertyName=$true)]
         # Display name of the new user. If not given, the Alias is used.
@@ -1236,11 +1247,17 @@ function New-User
         # Type of user. Default is simple user.
         [ZbxUserType] $UserType = [ZbxUserType]::User,
 
-        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName = "ids")][ValidateNotNullOrEmpty()][Alias("UsrGrpId")]
+        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName = "login_withgroupid")]
+        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName = "pscred_withgroupid")]
+        [ValidateNotNullOrEmpty()][Alias("UsrGrpId")]
+        # The ID of the groups the new user belongs to.
         [int[]] $UserGroupId,
 
-        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName = "objects")][ValidateNotNullOrEmpty()][Alias("UsrGrps")]
-        [ValidateScript({ $_.usrgrpid -ne $null})]
+        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName = "login_withgroupobject")]
+        [Parameter(Mandatory=$True, ValueFromPipelineByPropertyName=$true, ParameterSetName = "pscred_withgroupobject")]
+        [ValidateNotNullOrEmpty()][ValidateScript({ $_.usrgrpid -ne $null})]
+        [Alias("UsrGrps")]
+        # The groups the new user belongs to.
         [object[]] $UserGroup
     )
 
@@ -1251,13 +1268,19 @@ function New-User
     process
     {
         $usergrps = @()
-        if ($PSCmdlet.ParameterSetName -eq "ids")
+        if ($PSCmdlet.ParameterSetName -in "login_withgroupid", "pscred_withgroupid")
         {
             $UserGroupId |% { $usergrps += @{usrgrpid = $_} }
         }
         else 
         {
             $usergrps += $UserGroup
+        }
+
+        if ($PSCmdlet.ParameterSetName -in "pscred_withgroupid", "pscred_withgroupobject")
+        {
+            $Alias = $Credential.GetNetworkCredential().UserName
+            $Pp = $Credential.GetNetworkCredential().Password
         }
 
         $prms += @{
@@ -1731,6 +1754,7 @@ function Get-Media
     -------  ------ ----------- ------
           1       3           1 Enabled
     #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseSingularNouns", "")]
     param
     (
         [Parameter(Mandatory=$False)]
