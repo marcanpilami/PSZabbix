@@ -559,4 +559,17 @@ InModuleScope PSZabbix {
             [int](get-usergroup pestertestenable1).users_status | should be 0
         }
     }
+
+    Describe "Update-Host" {
+        $name = "pestertesthost$(Get-Random)"
+        Get-Host -name "perster*" | remove-host
+        Get-Host -name "newname" | remove-host
+        $h = New-Host -Name $name -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+
+        It "can update the name of a host" {
+            $h.name = "newname"
+            $h | update-host 
+            get-host -id $h.hostid | select -ExpandProperty name | should be "newname"
+        }
+    }
 }
