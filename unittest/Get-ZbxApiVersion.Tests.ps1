@@ -2,18 +2,27 @@
 . ..\src\Get-ZbxApiVersion.ps1
 
 Describe "Get-ZbxApiVersion" {
-    function HashVersionFromUri([string]$theUri)
-    {
-        $bytes = [System.Security.Cryptography.HashAlgorithm]::Create("MD5").ComputeHash([System.Text.Encoding]::UTF8.GetBytes($theUri))
-        $version = 0
-        $bytes | Foreach-Object { $version += $_ }
-        $version
+    BeforeAll {
+        function HashVersionFromUri([string]$theUri)
+        {
+            $bytes = [System.Security.Cryptography.HashAlgorithm]::Create("MD5").ComputeHash([System.Text.Encoding]::UTF8.GetBytes($theUri))
+            $version = 0
+            $bytes | Foreach-Object { $version += $_ }
+            $version
+        }
+    
+        $uri_1 = "http://1.1.1.1/"
+        $ver_1 = HashVersionFromUri $uri_1
+        $uri_2 = "http://2.2.2.2/"
+        $ver_2 = HashVersionFromUri $uri_2
+    
+        Mock Invoke-RestMethod {
+            param($Uri, $Method, $ContentType, $Body)
+            $version = HashVersionFromUri $Uri
+            @{jsonrpc=2.0; result=$version; id=1}
+        }
+    
     }
-
-    $uri_1 = "http://1.1.1.1/"
-    $ver_1 = HashVersionFromUri $uri_1
-    $uri_2 = "http://2.2.2.2/"
-    $ver_2 = HashVersionFromUri $uri_2
 
     BeforeEach {
         $script:LatestSession = @{Uri = $uri_1; Auth = "dummy_token"}            
@@ -21,12 +30,6 @@ Describe "Get-ZbxApiVersion" {
     
     AfterEach {
         Remove-Variable -Scope script -Name LatestSession
-    }
-
-    Mock Invoke-RestMethod {
-        param($Uri, $Method, $ContentType, $Body)
-        $version = HashVersionFromUri $Uri
-        @{jsonrpc=2.0; result=$version; id=1}
     }
 
     Context "Session parameter set" {

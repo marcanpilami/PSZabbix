@@ -14,8 +14,10 @@ Describe "New-ZbxApiSession" {
     $PhonyAuth = "2cce0ad0fac0a5da348fdb70ae9b233b"
 
     Context "Web Exceptions" {
-        Mock Invoke-RestMethod {
-            throw "The remote name could not be resolved: 'myserver'"
+        BeforeAll {
+            Mock Invoke-RestMethod {
+                throw "The remote name could not be resolved: 'myserver'"
+            }
         }
 
         It "Bubbles up exceptions from Rest calls" {
@@ -24,14 +26,16 @@ Describe "New-ZbxApiSession" {
     }
 
     Context "Supported version of Zabbix" {
-        Mock Invoke-RestMethod {
-            @{jsonrpc=2.0; result=$PhonyAuth; id=1}
+        BeforeAll {
+            Mock Invoke-RestMethod {
+                @{jsonrpc=2.0; result=$PhonyAuth; id=1}
+            }
+            Mock Get-ZbxApiVersion {
+                "3.2"
+            }
+            Mock Write-Information {}
+            Mock Write-Warning {}
         }
-        Mock Get-ZbxApiVersion {
-            "3.2"
-        }
-        Mock Write-Information {}
-        Mock Write-Warning {}
 
         It "Checks Zabbix version and writes a success message" {
             
@@ -53,14 +57,16 @@ Describe "New-ZbxApiSession" {
     }
 
     Context "Successful connection - unsupported version" {
-        Mock Invoke-RestMethod {
-            @{jsonrpc=2.0; result=$PhonyAuth; id=1}
+        BeforeAll {
+            Mock Invoke-RestMethod {
+                @{jsonrpc=2.0; result=$PhonyAuth; id=1}
+            }
+            Mock Get-ZbxApiVersion {
+                "1.2"
+            }
+            Mock Write-Information {}
+            Mock Write-Warning {}    
         }
-        Mock Get-ZbxApiVersion {
-            "1.2"
-        }
-        Mock Write-Information {}
-        Mock Write-Warning {}
 
         It "Checks Zabbix version and writes a warning message if the version is unsupported" {
 

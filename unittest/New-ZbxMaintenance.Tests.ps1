@@ -5,16 +5,20 @@ BeforeAll {
 
 
 Describe "New-ZbxMaintenance" {
-    function Invoke-ZbxZabbixApi {} # declare it so I can mock it
+    BeforeAll {
+		function Invoke-ZbxZabbixApi {} # declare it so I can mock it
+	}
 
     Context "Parameter scenarios" {
-        Mock Invoke-ZbxZabbixApi { 
-            param ($session, $method, [hashtable] $prms)
-            #
-            # Just return the params for inspection - not a mock Zabbix result
-            #
-            $prms["method"] = $method
-            $prms
+        BeforeAll {
+            Mock Invoke-ZbxZabbixApi { 
+                param ($session, $method, [hashtable] $prms)
+                #
+                # Just return the params for inspection - not a mock Zabbix result
+                #
+                $prms["method"] = $method
+                $prms
+            }
         }
 
         It "Is called with HostGroupId parameter" {

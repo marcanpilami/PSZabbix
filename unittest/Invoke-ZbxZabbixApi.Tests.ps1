@@ -13,21 +13,24 @@ Describe "Invoke-ZabbixApi" {
     }
 
     Context "Web Exceptions" {
-        Mock Invoke-RestMethod {
-            throw "The remote name could not be resolved: 'myserver'"
+        BeforeAll {
+            Mock Invoke-RestMethod {
+                throw "The remote name could not be resolved: 'myserver'"
+            }
         }
-
         It "Bubbles up exceptions from Rest calls" {
             { Invoke-ZbxZabbixApi "http://myserver" $PhonyCreds } | Should -Throw
         }
     }
 
     Context "Session variable situations" {
-        Mock Invoke-RestMethod {
-            param($Uri, $Method, $ContentType, $Body)
-            @{jsonrpc=2.0; result=$Uri; id=1} # hack - pass the uri back as auth so we can see which session varible was used.
+        BeforeAll {
+            Mock Invoke-RestMethod {
+                param($Uri, $Method, $ContentType, $Body)
+                @{jsonrpc=2.0; result=$Uri; id=1} # hack - pass the uri back as auth so we can see which session varible was used.
+            }
+            Mock New-ZbxJsonrpcRequest {}    
         }
-        Mock New-ZbxJsonrpcRequest {}
 
         It "Uses the session parameter if provided" {
             $result = Invoke-ZbxZabbixApi -Session @{Uri = "ParamSession"} -method "some.method" -parameters @{"dummy" = "parameters"}
@@ -47,11 +50,13 @@ Describe "Invoke-ZabbixApi" {
     }
 
     Context "Zabbix errors" {
-        Mock Invoke-RestMethod {
-            @{"error"=@{"message"="error message"; "data"="error data";"code"="error code"}}
+        BeforeAll {
+            Mock Invoke-RestMethod {
+                @{"error"=@{"message"="error message"; "data"="error data";"code"="error code"}}
+            }
+            Mock New-ZbxJsonrpcRequest {}
+            Mock Write-Error {}    
         }
-        Mock New-ZbxJsonrpcRequest {}
-        Mock Write-Error {}
 
         It "Writes an error and returns null if a Zabbix error is encountered" {
             $result = Invoke-ZbxZabbixApi -Session $null -method "some.method" -parameters @{"dummy" = "parameters"}

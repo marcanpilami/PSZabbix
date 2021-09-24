@@ -5,19 +5,23 @@ BeforeAll {
 
 
 Describe "Get-ZbxMaintenance" {
-    function Invoke-ZbxZabbixApi {} # declare it so I can mock it
+    BeforeAll {
+		function Invoke-ZbxZabbixApi {} # declare it so I can mock it
+	}
 
     Context "Parameter scenarios" {
-        Mock Invoke-ZbxZabbixApi { 
-            param ($session, $method, [hashtable] $prms)
-            #
-            # Just return the params for inspection - not a mock Zabbix result
-            # Set Status and HostID to avoid exception in the Get-ZbxHost function
-            #
-            $prms["Status"] = 1
-            $prms["hostId"] = 123
-            $prms["method"] = $method
-            $prms
+        BeforeAll {
+            Mock Invoke-ZbxZabbixApi { 
+                param ($session, $method, [hashtable] $prms)
+                #
+                # Just return the params for inspection - not a mock Zabbix result
+                # Set Status and HostID to avoid exception in the Get-ZbxHost function
+                #
+                $prms["Status"] = 1
+                $prms["hostId"] = 123
+                $prms["method"] = $method
+                $prms
+            }
         }
 
         It "Is called with Id parameter" {
