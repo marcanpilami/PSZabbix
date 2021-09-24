@@ -1,4 +1,7 @@
-. ..\src\Remove-ZbxMaintenance.ps1
+BeforeAll {
+    . $PSScriptRoot\..\src\Remove-ZbxMaintenance.ps1
+}
+
 
 Describe "Remove-ZbxMaintenance" {
     function Invoke-ZbxZabbixApi {} # declare it so I can mock it

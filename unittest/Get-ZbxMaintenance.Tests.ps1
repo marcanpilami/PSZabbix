@@ -1,5 +1,8 @@
-. ..\src\Get-ZbxMaintenance.ps1
-. ..\src\InternalZabbixTypes.ps1
+BeforeAll {
+    . $PSScriptRoot\..\src\Get-ZbxMaintenance.ps1
+    . $PSScriptRoot\..\src\InternalZabbixTypes.ps1
+}
+
 
 Describe "Get-ZbxMaintenance" {
     function Invoke-ZbxZabbixApi {} # declare it so I can mock it

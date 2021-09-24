@@ -1,4 +1,7 @@
-. ..\src\New-ZbxJsonrpcRequest.ps1
+BeforeAll {
+    . $PSScriptRoot\..\src\New-ZbxJsonrpcRequest.ps1
+}
+
 Describe "New-ZbxJsonrpcRequest" {
     It "Assembles a fully specified jsonrpc body" {
         $resultJSON = New-ZbxJsonrpcRequest -method "maintenance.get" -params @{ "output" = "extend"; "selectGroups" = "extend"; "selectTimeperiods" = "extend" } -auth "038e1d7b1735c6a5436ee9eae095879e"

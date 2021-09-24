@@ -1,5 +1,8 @@
-. ..\src\New-ZbxJsonrpcRequest.ps1
-. ..\src\Invoke-ZbxZabbixApi.ps1
+BeforeAll {
+    . $PSScriptRoot\..\src\New-ZbxJsonrpcRequest.ps1
+    . $PSScriptRoot\..\src\Invoke-ZbxZabbixApi.ps1
+}
+
 
 Describe "Invoke-ZabbixApi" {
     BeforeEach {

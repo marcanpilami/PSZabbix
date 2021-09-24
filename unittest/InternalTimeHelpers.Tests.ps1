@@ -1,4 +1,7 @@
-. ..\src\InternalTimeHelpers.ps1
+BeforeAll {
+    . $PSScriptRoot\..\src\InternalTimeHelpers.ps1
+}
+
 
 Describe "Time helpers" {
     Context "Simple conversions" {

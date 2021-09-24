@@ -1,5 +1,8 @@
-. ..\src\InternalTimeHelpers.ps1
-. ..\src\New-ZbxMaintenance.ps1
+BeforeAll {
+    . $PSScriptRoot\..\src\InternalTimeHelpers.ps1
+    . $PSScriptRoot\..\src\New-ZbxMaintenance.ps1
+}
+
 
 Describe "New-ZbxMaintenance" {
     function Invoke-ZbxZabbixApi {} # declare it so I can mock it
