@@ -19,7 +19,7 @@ Describe "New-ZbxApiSession" {
         }
 
         It "Bubbles up exceptions from Rest calls" {
-            { New-ZbxApiSession "http://myserver" $PhonyCreds } | should throw
+            { New-ZbxApiSession "http://myserver" $PhonyCreds } | Should -Throw
         }
     }
 

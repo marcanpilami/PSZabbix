@@ -26,11 +26,11 @@ InModuleScope PSZabbix {
         }
 
         It "fails when URL is wrong" {
-            {New-ApiSession "http://localhost:12345/zabbix" $admin} | Should Throw
+            {New-ApiSession "http://localhost:12345/zabbix" $admin} | Should -Throw
         } -Skip
 
         It "fails when login/password is wrong" {
-            {New-ApiSession $baseUrl $admin2} | Should Throw
+            {New-ApiSession $baseUrl $admin2} | Should -Throw
         }
     }
 
@@ -215,15 +215,15 @@ InModuleScope PSZabbix {
             New-HostGroup -Name "pestertestrem" -errorAction silentlycontinue
             $h = Get-HostGroup pestertestrem
             remove-HostGroup $h.groupid | should be $h.groupid
-            Get-HostGroup pestertestrem | should Throw
+            Get-HostGroup pestertestrem | Should -Throw
         }
         It "can delete from multiple explicit ID parameters" {
             $h1 = New-HostGroup -Name "pestertestrem"
             $h2 =  New-HostGroup -Name "pestertestrem2" -errorAction silentlycontinue
             $h2 = get-Hostgroup pestertestrem2
             remove-Hostgroup $h1.groupid,$h2.groupid | should be @($h1.groupid, $h2.groupid)
-            Get-HostGroup pestertestrem | should Throw
-            Get-HostGroup pestertestrem2 | should Throw
+            Get-HostGroup pestertestrem | Should -Throw
+            Get-HostGroup pestertestrem2 | Should -Throw
         }
         It "can delete from multiple piped IDs" {
             $h1 = New-HostGroup -Name "pestertestrem"
@@ -278,15 +278,15 @@ InModuleScope PSZabbix {
             New-UserGroup -Name "pestertestrem" -errorAction silentlycontinue
             $h = Get-UserGroup pestertestrem
             Remove-UserGroup $h.usrgrpid | should be $h.usrgrpid
-            Get-UserGroup pestertestrem | should Throw
+            Get-UserGroup pestertestrem | Should -Throw
         }
         It "can delete from multiple explicit ID parameters" {
             $h1 = New-UserGroup -Name "pestertestrem"
             $h2 =  New-UserGroup -Name "pestertestrem2" -errorAction silentlycontinue
             $h2 = get-Usergroup pestertestrem2
             remove-usergroup $h1.usrgrpid,$h2.usrgrpid | should be @($h1.usrgrpid, $h2.usrgrpid)
-            Get-UserGroup pestertestrem | should Throw
-            Get-UserGroup pestertestrem2 | should Throw
+            Get-UserGroup pestertestrem | Should -Throw
+            Get-UserGroup pestertestrem2 | Should -Throw
         }
         It "can delete from multiple piped IDs" {
             $h1 = New-UserGroup -Name "pestertestrem"
@@ -338,15 +338,15 @@ InModuleScope PSZabbix {
             New-User -Alias "pestertestrem" -UserGroupId 8 -errorAction silentlycontinue
             $h = Get-User pestertestrem
             Remove-User $h.userid | should be $h.userid
-            Get-User pestertestrem | should Throw
+            Get-User pestertestrem | Should -Throw
         }
         It "can delete from multiple explicit ID parameters" {
             $h1 = New-User -Alias "pestertestrem" -UserGroupId 8 
             $h2 =  New-User -Alias "pestertestrem2" -UserGroupId 8  -errorAction silentlycontinue
             $h2 = get-User pestertestrem2
             remove-user $h1.userid,$h2.userid | should be @($h1.userid, $h2.userid)
-            Get-User pestertestrem | should Throw
-            Get-User pestertestrem2 | should Throw
+            Get-User pestertestrem | Should -Throw
+            Get-User pestertestrem2 | Should -Throw
         }
         It "can delete from multiple piped IDs" {
             $h1 = New-User -Alias "pestertestrem" -UserGroupId 8 

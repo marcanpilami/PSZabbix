@@ -3,7 +3,6 @@ BeforeAll {
     . $PSScriptRoot\..\src\Invoke-ZbxZabbixApi.ps1
 }
 
-
 Describe "Invoke-ZabbixApi" {
     BeforeEach {
         $script:LatestSession = @{Uri = "LatestSession"; Auth = "dummy_token"}            
@@ -19,7 +18,7 @@ Describe "Invoke-ZabbixApi" {
         }
 
         It "Bubbles up exceptions from Rest calls" {
-            { Invoke-ZbxZabbixApi "http://myserver" $PhonyCreds } | should throw
+            { Invoke-ZbxZabbixApi "http://myserver" $PhonyCreds } | Should -Throw
         }
     }
 
@@ -42,7 +41,7 @@ Describe "Invoke-ZabbixApi" {
 
         It "Throws if both session and lastsession are null" {
             Remove-Variable -Scope script -Name LatestSession
-            { Invoke-ZbxZabbixApi -Session $null -method "some.method" -parameters @{"dummy" = "parameters"}} | should throw
+            { Invoke-ZbxZabbixApi -Session $null -method "some.method" -parameters @{"dummy" = "parameters"}} | Should -Throw
             $script:LatestSession = @{Uri = "LatestSession"; Auth = "dummy_token"} # put it back to appease test cleanup
         }
     }

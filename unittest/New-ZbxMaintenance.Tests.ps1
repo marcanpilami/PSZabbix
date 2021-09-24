@@ -29,7 +29,7 @@ Describe "New-ZbxMaintenance" {
 
         It "Check that the Name parameter is populated" {
 
-            { New-ZbxMaintenance -HostGroupId 3 -Name "" } | should throw
+            { New-ZbxMaintenance -HostGroupId 3 -Name "" } | Should -Throw
         }
 
         It "Populates the Name parameter" {
@@ -61,7 +61,7 @@ Describe "New-ZbxMaintenance" {
 
         It "requires one or the other of the -HostId and -HostGroupId parameters" {
 
-            { New-ZbxMaintenance  -Name "Patch Tuesday" } | should throw
+            { New-ZbxMaintenance  -Name "Patch Tuesday" } | Should -Throw
         
         }
 

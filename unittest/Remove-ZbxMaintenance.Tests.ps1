@@ -45,7 +45,7 @@ Describe "Remove-ZbxMaintenance" {
 
         It "Throws if called with empty array of Ids" {
 
-            { Remove-ZbxMaintenance -MaintenanceId $() } | should throw
+            { Remove-ZbxMaintenance -MaintenanceId $() } | Should -Throw
         
         }
     }
