@@ -61,7 +61,7 @@ Describe "Invoke-ZabbixApi" {
         It "Writes an error and returns null if a Zabbix error is encountered" {
             $result = Invoke-ZbxZabbixApi -Session $null -method "some.method" -parameters @{"dummy" = "parameters"}
             $result | Should -Be $null
-            Assert-MockCalled Write-Error -Times 1 -Exactly
-        }
+            Should -Invoke Write-Error -Times 1 -Exactly -Scope It
+        } 
     }
 }

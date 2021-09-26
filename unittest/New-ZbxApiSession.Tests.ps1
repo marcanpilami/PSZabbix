@@ -44,15 +44,15 @@ Describe "New-ZbxApiSession" {
 
             $session["Uri"] | Should -Be $PhonyUri
             $session["Auth"] | Should -Be $PhonyAuth
-            Assert-MockCalled Write-Information -Times 1 -Exactly
-            Assert-MockCalled Write-Warning -Times 0 -Exactly    
+            Should -Invoke Write-Information -Times 1 -Exactly -Scope It
+            Should -Invoke Write-Warning     -Times 0 -Exactly -Scope It
         }
 
         It "Writes no information messages if the silent switch is specified" {
             
             $session = New-ZbxApiSession $PhonyUri $PhonyCreds -silent
 
-            Assert-MockCalled Write-Information -Times 1 -Exactly  # no increment in call count since last test
+            Should -Invoke Write-Information -Times 0 -Exactly -Scope It # no increment in call count since last test
         }
 
     }
@@ -75,8 +75,8 @@ Describe "New-ZbxApiSession" {
 
             $session["Uri"] | Should -Be $PhonyUri
             $session["Auth"] | Should -Be $PhonyAuth
-            Assert-MockCalled Write-Information -Times 1 -Exactly
-            Assert-MockCalled Write-Warning -Times 1 -Exactly    
+            Should -Invoke Write-Information -Times 1 -Exactly -Scope It
+            Should -Invoke Write-Warning -Times 1 -Exactly -Scope It
         }
     }
 }
