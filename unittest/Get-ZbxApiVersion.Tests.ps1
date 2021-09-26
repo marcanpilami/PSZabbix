@@ -1,5 +1,7 @@
-. ..\src\New-ZbxJsonrpcRequest.ps1
-. ..\src\Get-ZbxApiVersion.ps1
+BeforeAll {
+    . ..\src\New-ZbxJsonrpcRequest.ps1
+    . ..\src\Get-ZbxApiVersion.ps1    
+}
 
 Describe "Get-ZbxApiVersion" {
     BeforeAll {

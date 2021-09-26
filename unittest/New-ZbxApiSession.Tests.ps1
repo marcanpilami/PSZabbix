@@ -6,12 +6,13 @@ BeforeAll {
 
 
 Describe "New-ZbxApiSession" {
-    
+    BeforeAll {
     $PhonyUser = "nonUser"
     $PhonyPassword = "nonPassword" | ConvertTo-SecureString -AsPlainText -Force
     $PhonyCreds = New-Object -TypeName "System.Management.Automation.PSCredential" -ArgumentList $PhonyUser,$PhonyPassword
     $PhonyUri = "http://myserver/zabbix/api_jsonrpc.php"
     $PhonyAuth = "2cce0ad0fac0a5da348fdb70ae9b233b"
+    }
 
     Context "Web Exceptions" {
         BeforeAll {
