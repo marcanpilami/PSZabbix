@@ -7,11 +7,11 @@ BeforeAll {
 
 Describe "New-ZbxApiSession" {
     BeforeAll {
-    $PhonyUser = "nonUser"
-    $PhonyPassword = "nonPassword" | ConvertTo-SecureString -AsPlainText -Force
-    $PhonyCreds = New-Object -TypeName "System.Management.Automation.PSCredential" -ArgumentList $PhonyUser,$PhonyPassword
-    $PhonyUri = "http://myserver/zabbix/api_jsonrpc.php"
-    $PhonyAuth = "2cce0ad0fac0a5da348fdb70ae9b233b"
+        $PhonyUser = "nonUser"
+        $PhonyPassword = "nonPassword" | ConvertTo-SecureString -AsPlainText -Force
+        $PhonyCreds = New-Object -TypeName "System.Management.Automation.PSCredential" -ArgumentList $PhonyUser,$PhonyPassword
+        $PhonyUri = "http://myserver/zabbix/api_jsonrpc.php"
+        $PhonyAuth = "2cce0ad0fac0a5da348fdb70ae9b233b"    
     }
 
     Context "Web Exceptions" {
@@ -42,8 +42,8 @@ Describe "New-ZbxApiSession" {
             
             $session = New-ZbxApiSession $PhonyUri $PhonyCreds
 
-            $session["Uri"] | should Be $PhonyUri
-            $session["Auth"] | should Be $PhonyAuth
+            $session["Uri"] | Should -Be $PhonyUri
+            $session["Auth"] | Should -Be $PhonyAuth
             Assert-MockCalled Write-Information -Times 1 -Exactly
             Assert-MockCalled Write-Warning -Times 0 -Exactly    
         }
@@ -73,8 +73,8 @@ Describe "New-ZbxApiSession" {
 
             $session = New-ZbxApiSession $PhonyUri $PhonyCreds
 
-            $session["Uri"] | should Be $PhonyUri
-            $session["Auth"] | should Be $PhonyAuth
+            $session["Uri"] | Should -Be $PhonyUri
+            $session["Auth"] | Should -Be $PhonyAuth
             Assert-MockCalled Write-Information -Times 1 -Exactly
             Assert-MockCalled Write-Warning -Times 1 -Exactly    
         }

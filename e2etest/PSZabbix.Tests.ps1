@@ -20,9 +20,9 @@ InModuleScope PSZabbix {
         $session = New-ApiSession $baseUrl $admin -silent
 
         It "connects to zabbix and returns a non-empty session object" {
-            $session | should Not Be $null
-            $session["Uri"] | should Not Be $null
-            $session["Auth"] | should Not Be $null
+            $session | Should -Not -Be $null
+            $session["Uri"] | Should -Not -Be $null
+            $session["Auth"] | Should -Not -Be $null
         }
 
         It "fails when URL is wrong" {
@@ -37,31 +37,31 @@ InModuleScope PSZabbix {
     Describe "New-Host" {
         It "can create an enabled host from explicit ID parameters" {
             $h = New-Host -Name "pestertesthost$(Get-Random)" -HostGroupId 2 -TemplateId 10108 -Dns localhost
-            $h | should not be $null
-            $h.status | should be 0
+            $h | Should -Not -Be $null
+            $h.status | Should -Be 0
         }
         It "can create an disabled host from explicit ID parameters" {
             $h = New-Host -Name "pestertesthost$(Get-Random)" -HostGroupId 2 -TemplateId 10108 -Dns localhost -status disabled
-            $h | should not be $null
-            $h.status | should be 1
+            $h | Should -Not -Be $null
+            $h.status | Should -Be 1
         }
     }
 
     Describe "Get-Host" {
         It "can return all hosts" {
-            Get-Host | Should Not BeNullOrEmpty
+            Get-Host | Should -Not -BeNullOrEmpty
         }
         It "can filter by name with wildcard (explicit parameter)" {
-            Get-Host "pestertesthost*" | Should Not BeNullOrEmpty
-            Get-Host "pestertesthostXXX*" | Should BeNullOrEmpty
+            Get-Host "pestertesthost*" | Should -Not -BeNullOrEmpty
+            Get-Host "pestertesthostXXX*" | Should -BeNullOrEmpty
         }
         It "can filter by ID (explicit parameter)" {
             $h = (Get-Host "pestertesthost*")[0]
-            (Get-Host -Id $h.hostid).host | Should Be $h.host
+            (Get-Host -Id $h.hostid).host | Should -Be $h.host
         }
         It "can filter by group membership (explicit parameter)" {
             $h = (Get-Host "pestertesthost*")[0]
-            (Get-Host -Id $h.hostid -HostGroupId 2).host | Should Be $h.host
+            (Get-Host -Id $h.hostid -HostGroupId 2).host | Should -Be $h.host
         }
     }
 
@@ -69,26 +69,26 @@ InModuleScope PSZabbix {
         It "can delete from one explicit ID parameter" {
             New-Host -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
             $h = Get-Host pestertesthostrem
-            remove-Host $h.hostid | should be $h.hostid
+            remove-Host $h.hostid | Should -Be $h.hostid
         }
         It "can delete from multiple explicit ID parameters" {
             $h1 = New-Host -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
             $h2 = New-Host -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-            remove-Host $h1.hostid,$h2.hostid | should be @($h1.hostid, $h2.hostid)
+            remove-Host $h1.hostid,$h2.hostid | Should -Be @($h1.hostid, $h2.hostid)
         }
         It "can delete from multiple piped IDs" {
             $h1 = New-Host -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
             $h2 = New-Host -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId 10108 -Dns localhost
-            $h1.hostid,$h2.hostid | remove-Host | should be @($h1.hostid, $h2.hostid)
+            $h1.hostid,$h2.hostid | remove-Host | Should -Be @($h1.hostid, $h2.hostid)
         }
         It "can delete from one piped object parameter" {
             $h = New-Host -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
-            $h | remove-Host | should be $h.hostid
+            $h | remove-Host | Should -Be $h.hostid
         }
         It "can delete from multiple piped objects" {
             $h1 = New-Host -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
             $h2 = New-Host -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId 10108 -Dns localhost
-            $h1,$h2 | remove-Host | should be @($h1.hostid, $h2.hostid)
+            $h1,$h2 | remove-Host | Should -Be @($h1.hostid, $h2.hostid)
         }
     }
 
@@ -99,16 +99,16 @@ InModuleScope PSZabbix {
         $h2 = get-host pestertesthost2
 
         It "can enable multiple piped objects" {
-            $h1,$h2 | Disable-host | should be @($h1.hostid, $h2.hostid)
-            (get-host pestertesthost1).status | should be 1
+            $h1,$h2 | Disable-host | Should -Be @($h1.hostid, $h2.hostid)
+            (get-host pestertesthost1).status | Should -Be 1
         }
         It "can enable multiple piped IDs" {
-            $h1.hostid,$h2.hostid | Disable-host | should be @($h1.hostid, $h2.hostid)
-            (get-host pestertesthost1).status | should be 1
+            $h1.hostid,$h2.hostid | Disable-host | Should -Be @($h1.hostid, $h2.hostid)
+            (get-host pestertesthost1).status | Should -Be 1
         }
         It "can enable multiple explicit parameter IDs" {
-            Disable-host $h1.hostid,$h2.hostid | should be @($h1.hostid, $h2.hostid)
-            (get-host pestertesthost1).status | should be 1
+            Disable-host $h1.hostid,$h2.hostid | Should -Be @($h1.hostid, $h2.hostid)
+            (get-host pestertesthost1).status | Should -Be 1
         }
     }
 
@@ -119,16 +119,16 @@ InModuleScope PSZabbix {
         $h2 = get-host pestertesthost2
 
         It "can enable multiple piped objects" {
-            $h1,$h2 | enable-host | should be @($h1.hostid, $h2.hostid)
-            (get-host pestertesthost1).status | should be 0
+            $h1,$h2 | enable-host | Should -Be @($h1.hostid, $h2.hostid)
+            (get-host pestertesthost1).status | Should -Be 0
         }
         It "can enable multiple piped IDs" {
-            $h1.hostid,$h2.hostid | enable-host | should be @($h1.hostid, $h2.hostid)
-            (get-host pestertesthost1).status | should be 0
+            $h1.hostid,$h2.hostid | enable-host | Should -Be @($h1.hostid, $h2.hostid)
+            (get-host pestertesthost1).status | Should -Be 0
         }
         It "can enable multiple explicit parameter IDs" {
-            enable-host $h1.hostid,$h2.hostid | should be @($h1.hostid, $h2.hostid)
-            (get-host pestertesthost1).status | should be 0
+            enable-host $h1.hostid,$h2.hostid | Should -Be @($h1.hostid, $h2.hostid)
+            (get-host pestertesthost1).status | Should -Be 0
         }
     }
 
@@ -144,7 +144,7 @@ InModuleScope PSZabbix {
 
         It "adds a set of groups given as a parameter to multiple piped hosts" {
             $h1,$h2 | Add-HostGroupMembership $g1,$g2
-            (get-HostGroup pestertest1).hosts.Count | should be 2
+            (get-HostGroup pestertest1).hosts.Count | Should -Be 2
         }
     }
 
@@ -160,53 +160,53 @@ InModuleScope PSZabbix {
 
         It "removes a set of groups given as a parameter to multiple piped hosts" {
             $h1,$h2 | Remove-HostGroupMembership $g1,$g2
-            (get-HostGroup pestertest1).hosts.Count | should be 0
+            (get-HostGroup pestertest1).hosts.Count | Should -Be 0
         }
     }
 
     Describe "Get-Template" {
         It "can return all templates" {
-            Get-Template | Should Not BeNullOrEmpty
+            Get-Template | Should -Not -BeNullOrEmpty
         }
         It "can filter by name with wildcard (explicit parameter)" {
-            Get-Template "Template OS Lin*" | Should Not BeNullOrEmpty
-            Get-Template "XXXXXXXXXXXXXX" | Should BeNullOrEmpty
+            Get-Template "Template OS Lin*" | Should -Not -BeNullOrEmpty
+            Get-Template "XXXXXXXXXXXXXX" | Should -BeNullOrEmpty
         }
         It "can filter by ID (explicit parameter)" {
             $h = (Get-Template "Template OS Lin*")[0]
-            (Get-Template -Id $h.templateid).host | Should Be $h.host
+            (Get-Template -Id $h.templateid).host | Should -Be $h.host
         }      
     }
 
     Describe "New-HostGroup" {
         It "creates a new group with explicit name parameter" {
             $g = New-HostGroup "pestertest$(Get-Random)","pestertest$(Get-Random)"
-            $g.count | should be 2
+            $g.count | Should -Be 2
             $g[0].name | should match "pestertest"
         }
         It "creates a new group with piped names" {
             $g = "pestertest$(Get-Random)","pestertest$(Get-Random)" | New-HostGroup
-            $g.count | should be 2
+            $g.count | Should -Be 2
             $g[0].name | should match "pestertest"
         }
         It "creates a new group with piped objects" {
             $g = (New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)"}),(New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)"}) | New-HostGroup
-            $g.count | should be 2
+            $g.count | Should -Be 2
             $g[0].name | should match "pestertest"
         }
     }
 
     Describe "Get-HostGroup" {
         It "can return all groups" {
-            Get-HostGroup | Should Not BeNullOrEmpty
+            Get-HostGroup | Should -Not -BeNullOrEmpty
         }
         It "can filter by name with wildcard (explicit parameter)" {
-            Get-HostGroup "pestertest*" | Should Not BeNullOrEmpty
-            Get-HostGroup "XXXXXXXXXXXXXX" | Should BeNullOrEmpty
+            Get-HostGroup "pestertest*" | Should -Not -BeNullOrEmpty
+            Get-HostGroup "XXXXXXXXXXXXXX" | Should -BeNullOrEmpty
         }
         It "can filter by ID (explicit parameter)" {
             $h = (Get-HostGroup "pestertest*")[0]
-            (Get-HostGroup -Id $h.groupid).name | Should Be $h.name
+            (Get-HostGroup -Id $h.groupid).name | Should -Be $h.name
         }      
     }
 
@@ -214,61 +214,61 @@ InModuleScope PSZabbix {
         It "can delete from one explicit ID parameter" {
             New-HostGroup -Name "pestertestrem" -errorAction silentlycontinue
             $h = Get-HostGroup pestertestrem
-            remove-HostGroup $h.groupid | should be $h.groupid
+            remove-HostGroup $h.groupid | Should -Be $h.groupid
             Get-HostGroup pestertestrem | Should -Throw
         }
         It "can delete from multiple explicit ID parameters" {
             $h1 = New-HostGroup -Name "pestertestrem"
             $h2 =  New-HostGroup -Name "pestertestrem2" -errorAction silentlycontinue
             $h2 = get-Hostgroup pestertestrem2
-            remove-Hostgroup $h1.groupid,$h2.groupid | should be @($h1.groupid, $h2.groupid)
+            remove-Hostgroup $h1.groupid,$h2.groupid | Should -Be @($h1.groupid, $h2.groupid)
             Get-HostGroup pestertestrem | Should -Throw
             Get-HostGroup pestertestrem2 | Should -Throw
         }
         It "can delete from multiple piped IDs" {
             $h1 = New-HostGroup -Name "pestertestrem"
             $h2 =  New-HostGroup -Name "pestertestrem2"
-            $h1.groupid,$h2.groupid | remove-Hostgroup | should be @($h1.groupid, $h2.groupid)
+            $h1.groupid,$h2.groupid | remove-Hostgroup | Should -Be @($h1.groupid, $h2.groupid)
         }
         It "can delete from one piped object parameter" {
             $h =  New-HostGroup -Name "pestertestrem"
-            $h | remove-Hostgroup | should be $h.groupid
+            $h | remove-Hostgroup | Should -Be $h.groupid
         }
         It "can delete from multiple piped objects" {
             $h1 = New-HostGroup -Name "pestertestrem"
             $h2 =  New-HostGroup -Name "pestertestrem2"
-            $h1,$h2 | remove-Hostgroup | should be @($h1.groupid, $h2.groupid)
+            $h1,$h2 | remove-Hostgroup | Should -Be @($h1.groupid, $h2.groupid)
         }
     }
 
     Describe "Get-UserGroup" {
         It "can return all groups" {
-            Get-UserGroup | Should Not BeNullOrEmpty
+            Get-UserGroup | Should -Not -BeNullOrEmpty
         }
         It "can filter by name with wildcard (explicit parameter)" {
-            Get-UserGroup "Zabbix*" | Should Not BeNullOrEmpty
-            Get-UserGroup "XXXXXXXXXXXXXX" | Should BeNullOrEmpty
+            Get-UserGroup "Zabbix*" | Should -Not -BeNullOrEmpty
+            Get-UserGroup "XXXXXXXXXXXXXX" | Should -BeNullOrEmpty
         }
         It "can filter by ID (explicit parameter)" {
             $h = (Get-UserGroup "Zabbix*")[0]
-            (Get-UserGroup -Id $h.usrgrpid).name | Should Be $h.name
+            (Get-UserGroup -Id $h.usrgrpid).name | Should -Be $h.name
         }      
     }
 
     Describe "New-UserGroup" {
         It "creates a new group with explicit name parameter" {
             $g = New-UserGroup "pestertest$(Get-Random)","pestertest$(Get-Random)"
-            $g.count | should be 2
+            $g.count | Should -Be 2
             $g[0].name | should match "pestertest"
         }
         It "creates a new group with piped names" {
             $g = "pestertest$(Get-Random)","pestertest$(Get-Random)" | New-UserGroup
-            $g.count | should be 2
+            $g.count | Should -Be 2
             $g[0].name | should match "pestertest"
         }
         It "creates a new group with piped objects" {
             $g = (New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)"}),(New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)"}) | New-UserGroup
-            $g.count | should be 2
+            $g.count | Should -Be 2
             $g[0].name | should match "pestertest"
         }
     }
@@ -277,59 +277,59 @@ InModuleScope PSZabbix {
         It "can delete from one explicit ID parameter" {
             New-UserGroup -Name "pestertestrem" -errorAction silentlycontinue
             $h = Get-UserGroup pestertestrem
-            Remove-UserGroup $h.usrgrpid | should be $h.usrgrpid
+            Remove-UserGroup $h.usrgrpid | Should -Be $h.usrgrpid
             Get-UserGroup pestertestrem | Should -Throw
         }
         It "can delete from multiple explicit ID parameters" {
             $h1 = New-UserGroup -Name "pestertestrem"
             $h2 =  New-UserGroup -Name "pestertestrem2" -errorAction silentlycontinue
             $h2 = get-Usergroup pestertestrem2
-            remove-usergroup $h1.usrgrpid,$h2.usrgrpid | should be @($h1.usrgrpid, $h2.usrgrpid)
+            remove-usergroup $h1.usrgrpid,$h2.usrgrpid | Should -Be @($h1.usrgrpid, $h2.usrgrpid)
             Get-UserGroup pestertestrem | Should -Throw
             Get-UserGroup pestertestrem2 | Should -Throw
         }
         It "can delete from multiple piped IDs" {
             $h1 = New-UserGroup -Name "pestertestrem"
             $h2 =  New-UserGroup -Name "pestertestrem2"
-            $h1.usrgrpid,$h2.usrgrpid | remove-usergroup | should be @($h1.usrgrpid, $h2.usrgrpid)
+            $h1.usrgrpid,$h2.usrgrpid | remove-usergroup | Should -Be @($h1.usrgrpid, $h2.usrgrpid)
         }
         It "can delete from one piped object parameter" {
             $h =  New-UserGroup -Name "pestertestrem"
-            $h | remove-Usergroup | should be $h.usrgrpid
+            $h | remove-Usergroup | Should -Be $h.usrgrpid
         }
         It "can delete from multiple piped objects" {
             $h1 = New-UserGroup -Name "pestertestrem"
             $h2 =  New-UserGroup -Name "pestertestrem2"
-            $h1,$h2 | remove-Usergroup | should be @($h1.usrgrpid, $h2.usrgrpid)
+            $h1,$h2 | remove-Usergroup | Should -Be @($h1.usrgrpid, $h2.usrgrpid)
         }
     }
 
     Describe "Get-User" {
         It "can return all users" {
-            Get-User | Should Not BeNullOrEmpty
+            Get-User | Should -Not -BeNullOrEmpty
         }
         It "can filter by name with wildcard (explicit parameter)" {
-            Get-User "Admi*" | Should Not BeNullOrEmpty
-            Get-User "XXXXXXXXXXXXXX" | Should BeNullOrEmpty
+            Get-User "Admi*" | Should -Not -BeNullOrEmpty
+            Get-User "XXXXXXXXXXXXXX" | Should -BeNullOrEmpty
         }
         It "can filter by ID (explicit parameter)" {
             $h = (Get-User "Admin")[0]
-            (Get-User -Id $h.userid).alias | Should Be $h.alias
+            (Get-User -Id $h.userid).alias | Should -Be $h.alias
         }      
     }
 
     Describe "New-User" {
         It "creates a new user with explicit parameters" {
             $g = @(New-User -Alias "pestertest$(get-random)" -name "marsu" -UserGroupId 8)
-            $g.count | should be 1
+            $g.count | Should -Be 1
             $g[0].name | should match "marsu"
         }
         It "creates a new user from another user (copy)" {
             $u = @(New-User -Alias "pestertest$(get-random)" -name "marsu" -UserGroupId 8)
             $g = $u | new-user -alias "pestertest$(get-random)"
-            $g.userid | should Not Be $null
+            $g.userid | Should -Not -Be $null
             $g.name | should match "marsu"
-            $g.usrgrps.usrgrpid | should be 8
+            $g.usrgrps.usrgrpid | Should -Be 8
         }
     }
 
@@ -337,30 +337,30 @@ InModuleScope PSZabbix {
         It "can delete from one explicit ID parameter" {
             New-User -Alias "pestertestrem" -UserGroupId 8 -errorAction silentlycontinue
             $h = Get-User pestertestrem
-            Remove-User $h.userid | should be $h.userid
+            Remove-User $h.userid | Should -Be $h.userid
             Get-User pestertestrem | Should -Throw
         }
         It "can delete from multiple explicit ID parameters" {
             $h1 = New-User -Alias "pestertestrem" -UserGroupId 8 
             $h2 =  New-User -Alias "pestertestrem2" -UserGroupId 8  -errorAction silentlycontinue
             $h2 = get-User pestertestrem2
-            remove-user $h1.userid,$h2.userid | should be @($h1.userid, $h2.userid)
+            remove-user $h1.userid,$h2.userid | Should -Be @($h1.userid, $h2.userid)
             Get-User pestertestrem | Should -Throw
             Get-User pestertestrem2 | Should -Throw
         }
         It "can delete from multiple piped IDs" {
             $h1 = New-User -Alias "pestertestrem" -UserGroupId 8 
             $h2 =  New-User -Alias "pestertestrem2" -UserGroupId 8 
-            $h1.userid,$h2.userid | remove-user | should be @($h1.userid, $h2.userid)
+            $h1.userid,$h2.userid | remove-user | Should -Be @($h1.userid, $h2.userid)
         }
         It "can delete from one piped object parameter" {
             $h =  New-User -Alias "pestertestrem" -UserGroupId 8 
-            $h | remove-User | should be $h.userid
+            $h | remove-User | Should -Be $h.userid
         }
         It "can delete from multiple piped objects" {
             $h1 = New-User -Alias "pestertestrem" -UserGroupId 8 
             $h2 =  New-User -Alias "pestertestrem2" -UserGroupId 8 
-            $h1,$h2 | remove-User | should be @($h1.userid, $h2.userid)
+            $h1,$h2 | remove-User | Should -Be @($h1.userid, $h2.userid)
         }
     }
 
@@ -379,10 +379,10 @@ InModuleScope PSZabbix {
             $u1 = get-User pestertestrem
             $u2 = get-User pestertestrem2
 
-            $u1,$u2 | Add-UserGroupMembership $g1,$g2 | should be @($u1.userid, $u2.userid)
+            $u1,$u2 | Add-UserGroupMembership $g1,$g2 | Should -Be @($u1.userid, $u2.userid)
             $u1 = get-User pestertestrem
             $u2 = get-User pestertestrem2
-            $u1.usrgrps | select -ExpandProperty usrgrpid | Should Be @(8, $g1.usrgrpid, $g2.usrgrpid)
+            $u1.usrgrps | select -ExpandProperty usrgrpid | Should -Be @(8, $g1.usrgrpid, $g2.usrgrpid)
         }
         It "same with ID instead of objects" {
             Get-User "pester*" | remove-User
@@ -398,10 +398,10 @@ InModuleScope PSZabbix {
             $u1 = get-User pestertestrem3
             $u2 = get-User pestertestrem4
 
-            $u1.userid,$u2.userid | Add-UserGroupMembership $g1.usrgrpid,$g2.usrgrpid | should be @($u1.userid, $u2.userid)
+            $u1.userid,$u2.userid | Add-UserGroupMembership $g1.usrgrpid,$g2.usrgrpid | Should -Be @($u1.userid, $u2.userid)
             $u1 = get-User pestertestrem3
             $u2 = get-User pestertestrem4
-            $u1.usrgrps | select -ExpandProperty usrgrpid | Should Be @(8, $g1.usrgrpid, $g2.usrgrpid)
+            $u1.usrgrps | select -ExpandProperty usrgrpid | Should -Be @(8, $g1.usrgrpid, $g2.usrgrpid)
         }
     }
 
@@ -420,11 +420,11 @@ InModuleScope PSZabbix {
             $u1 = get-User pestertestrem
             $u2 = get-User pestertestrem2
 
-            $u1,$u2 | Add-UserGroupMembership $g1,$g2 | should be @($u1.userid, $u2.userid)
-            $u1,$u2 | Remove-UserGroupMembership $g1,$g2 | should be @($u1.userid, $u2.userid)
+            $u1,$u2 | Add-UserGroupMembership $g1,$g2 | Should -Be @($u1.userid, $u2.userid)
+            $u1,$u2 | Remove-UserGroupMembership $g1,$g2 | Should -Be @($u1.userid, $u2.userid)
             $u1 = get-User pestertestrem
             $u2 = get-User pestertestrem2
-            $u1.usrgrps | select -ExpandProperty usrgrpid | Should Be @(8)
+            $u1.usrgrps | select -ExpandProperty usrgrpid | Should -Be @(8)
         }
         It "same with ID instead of objects" {
             Get-User "pester*" | remove-User
@@ -440,14 +440,14 @@ InModuleScope PSZabbix {
             $u1 = get-User pestertestrem3
             $u2 = get-User pestertestrem4
 
-            $u1.userid,$u2.userid | Add-UserGroupMembership $g1.usrgrpid,$g2.usrgrpid | should be @($u1.userid, $u2.userid)
+            $u1.userid,$u2.userid | Add-UserGroupMembership $g1.usrgrpid,$g2.usrgrpid | Should -Be @($u1.userid, $u2.userid)
             $u1 = get-User pestertestrem3
             $u2 = get-User pestertestrem4
-            $u1.usrgrps | select -ExpandProperty usrgrpid | Should Be @(8, $g1.usrgrpid, $g2.usrgrpid)
-            $u1.userid,$u2.userid | Remove-UserGroupMembership $g1.usrgrpid,$g2.usrgrpid | should be @($u1.userid, $u2.userid)
+            $u1.usrgrps | select -ExpandProperty usrgrpid | Should -Be @(8, $g1.usrgrpid, $g2.usrgrpid)
+            $u1.userid,$u2.userid | Remove-UserGroupMembership $g1.usrgrpid,$g2.usrgrpid | Should -Be @($u1.userid, $u2.userid)
             $u1 = get-User pestertestrem3
             $u2 = get-User pestertestrem4
-            $u1.usrgrps | select -ExpandProperty usrgrpid | Should Be @(8)
+            $u1.usrgrps | select -ExpandProperty usrgrpid | Should -Be @(8)
         }
     }
 
@@ -464,11 +464,11 @@ InModuleScope PSZabbix {
             $hg1 = get-HostGroup pestertest1
             $hg2 = get-HostGroup pestertest2
 
-            $ug1,$ug2 | Add-UserGroupPermission $hg1,$hg2 ReadWrite | should be @($ug1.usrgrpid, $ug2.usrgrpid)
+            $ug1,$ug2 | Add-UserGroupPermission $hg1,$hg2 ReadWrite | Should -Be @($ug1.usrgrpid, $ug2.usrgrpid)
             $ug1 = get-Usergroup pestertest1
             $ug2 = get-Usergroup pestertest2
-            $ug1.rights | select -ExpandProperty id | Should Be @($hg1.groupid, $hg2.groupid)
-            $ug1.rights | select -ExpandProperty permission | Should Be @(3, 3)
+            $ug1.rights | select -ExpandProperty id | Should -Be @($hg1.groupid, $hg2.groupid)
+            $ug1.rights | select -ExpandProperty permission | Should -Be @(3, 3)
         }
         It "can alter and clear permissions on a host group without touching permissions on other groups" {
             $ug1 = get-Usergroup pestertest1
@@ -477,65 +477,65 @@ InModuleScope PSZabbix {
             $hg2 = get-HostGroup pestertest2
 
             # Sanity check
-            $ug1.rights | select -ExpandProperty id | Should Be @($hg1.groupid, $hg2.groupid)
-            $ug1.rights | select -ExpandProperty permission | Should Be @(3, 3)
+            $ug1.rights | select -ExpandProperty id | Should -Be @($hg1.groupid, $hg2.groupid)
+            $ug1.rights | select -ExpandProperty permission | Should -Be @(3, 3)
 
             # Set HG1 RO.
-            $ug1,$ug2 | Add-UserGroupPermission $hg1 ReadOnly | should be @($ug1.usrgrpid, $ug2.usrgrpid)
+            $ug1,$ug2 | Add-UserGroupPermission $hg1 ReadOnly | Should -Be @($ug1.usrgrpid, $ug2.usrgrpid)
             $ug1 = get-Usergroup pestertest1
             $ug2 = get-Usergroup pestertest2
-            $ug1.rights | select -ExpandProperty id | Should Be @($hg1.groupid, $hg2.groupid)
-            $ug1.rights | select -ExpandProperty permission | Should Be @(2, 3)
+            $ug1.rights | select -ExpandProperty id | Should -Be @($hg1.groupid, $hg2.groupid)
+            $ug1.rights | select -ExpandProperty permission | Should -Be @(2, 3)
 
             # Clear HG1
-            $ug1,$ug2 | Add-UserGroupPermission $hg1 Clear | should be @($ug1.usrgrpid, $ug2.usrgrpid)
+            $ug1,$ug2 | Add-UserGroupPermission $hg1 Clear | Should -Be @($ug1.usrgrpid, $ug2.usrgrpid)
             $ug1 = get-Usergroup pestertest1
             $ug2 = get-Usergroup pestertest2
-            $ug1.rights | select -ExpandProperty id | Should Be @($hg2.groupid)
-            $ug1.rights | select -ExpandProperty permission | Should Be @(3)
+            $ug1.rights | select -ExpandProperty id | Should -Be @($hg2.groupid)
+            $ug1.rights | select -ExpandProperty permission | Should -Be @(3)
         }
     }
 
     Describe "Get-MediaType" {
         It "can return all types" {
-            Get-MediaType | Should Not BeNullOrEmpty
+            Get-MediaType | Should -Not -BeNullOrEmpty
         }
         It "can filter by technical media type" {
-            Get-MediaType -type Email | Should Not BeNullOrEmpty
-            Get-MediaType -type EzTexting | Should BeNullOrEmpty
+            Get-MediaType -type Email | Should -Not -BeNullOrEmpty
+            Get-MediaType -type EzTexting | Should -BeNullOrEmpty
         }         
     }
 
     Describe "Add-UserMail" {
         It "can add a mail to a user without mail" {
             $u = @(New-User -Alias "pestertestmedia$(get-random)" -name "marsu" -UserGroupId 8)[0]
-            $u | Add-UserMail toto1@company.com | Should Not BeNullOrEmpty
+            $u | Add-UserMail toto1@company.com | Should -Not -BeNullOrEmpty
         }
         It "can add a mail with specific severity filter" {
             $u = @(New-User -Alias "pestertestmedia$(get-random)" -name "marsu" -UserGroupId 8)[0]
-            $u | Add-UserMail toto1@company.com Information,Warning | Should Not BeNullOrEmpty
+            $u | Add-UserMail toto1@company.com Information,Warning | Should -Not -BeNullOrEmpty
         }
     }
 
     Describe "Get-Media" {
         It "can return all media" {
-            Get-Media |  Should Not BeNullOrEmpty
+            Get-Media |  Should -Not -BeNullOrEmpty
         }
 
         It "can filter by media type" {
-            Get-Media -MediaTypeId (Get-MediaType -Type email).mediatypeid |  Should Not BeNullOrEmpty
+            Get-Media -MediaTypeId (Get-MediaType -Type email).mediatypeid |  Should -Not -BeNullOrEmpty
         }
 
         It "can filter actions used by certain users" {
-            Get-Media -UserId @(Get-User -Name "pestertestmedia*")[0].userid |  Should Not BeNullOrEmpty
-            Get-Media -UserId @(Get-User -Name "Admin")[0].userid |  Should BeNullOrEmpty
+            Get-Media -UserId @(Get-User -Name "pestertestmedia*")[0].userid |  Should -Not -BeNullOrEmpty
+            Get-Media -UserId @(Get-User -Name "Admin")[0].userid |  Should -BeNullOrEmpty
         }
     }
 
     Describe "Remove-Media" {
         It "can remove piped media" {
-            Get-Media | Remove-Media |  Should Not BeNullOrEmpty
-            Get-Media |  Should BeNullOrEmpty
+            Get-Media | Remove-Media |  Should -Not -BeNullOrEmpty
+            Get-Media |  Should -BeNullOrEmpty
             Get-User -Name "pestertestmedia*" | Remove-User > $null
         }
     }
@@ -545,8 +545,8 @@ InModuleScope PSZabbix {
         $h1 = get-usergroup pestertestenable1
 
         It "can disable multiple piped objects" {
-            $h1 | Disable-UserGroup | should be @($h1.usrgrpid)
-            [int](get-usergroup pestertestenable1).users_status | should be 1
+            $h1 | Disable-UserGroup | Should -Be @($h1.usrgrpid)
+            [int](get-usergroup pestertestenable1).users_status | Should -Be 1
         }
     }
 
@@ -555,8 +555,8 @@ InModuleScope PSZabbix {
         $h1 = get-usergroup pestertestenable1
 
         It "can enable multiple piped objects" {
-            $h1 | Enable-UserGroup | should be @($h1.usrgrpid)
-            [int](get-usergroup pestertestenable1).users_status | should be 0
+            $h1 | Enable-UserGroup | Should -Be @($h1.usrgrpid)
+            [int](get-usergroup pestertestenable1).users_status | Should -Be 0
         }
     }
 
@@ -569,7 +569,7 @@ InModuleScope PSZabbix {
         It "can update the name of a host" {
             $h.name = "newname"
             $h | update-host 
-            get-host -id $h.hostid | select -ExpandProperty name | should be "newname"
+            get-host -id $h.hostid | select -ExpandProperty name | Should -Be "newname"
         }
     }
 }

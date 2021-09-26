@@ -8,11 +8,11 @@ Describe "New-ZbxJsonrpcRequest" {
 
         $resultHash = ConvertFrom-Json $resultJSON
 
-        $resultHash.method | should be "maintenance.get"
-        $resultHash.params.output | should be "extend"
-        $resultHash.params.selectGroups | should be "extend"
-        $resultHash.params.selectTimeperiods | should be "extend"
-        $resultHash.auth | should be "038e1d7b1735c6a5436ee9eae095879e"
+        $resultHash.method | Should -Be "maintenance.get"
+        $resultHash.params.output | Should -Be "extend"
+        $resultHash.params.selectGroups | Should -Be "extend"
+        $resultHash.params.selectTimeperiods | Should -Be "extend"
+        $resultHash.auth | Should -Be "038e1d7b1735c6a5436ee9eae095879e"
     }
 
     It "Defaults the output param to 'extend' on '*.get' methods" {
@@ -20,7 +20,7 @@ Describe "New-ZbxJsonrpcRequest" {
 
         $resultHash = ConvertFrom-Json $resultJSON
 
-        $resultHash.params.output | should be "extend"
+        $resultHash.params.output | Should -Be "extend"
     }
 
     It "Handles auth as an optional parameter" {
