@@ -1,5 +1,5 @@
 BeforeAll {
-    . $PSScriptRoot\..\src\New-ZbxJsonrpcRequest.ps1
+    . $PSScriptRoot/../src/New-ZbxJsonrpcRequest.ps1
 }
 
 Describe "New-ZbxJsonrpcRequest" {

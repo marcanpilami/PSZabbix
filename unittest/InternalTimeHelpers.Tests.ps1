@@ -1,5 +1,5 @@
 BeforeAll {
-    . $PSScriptRoot\..\src\InternalTimeHelpers.ps1
+    . $PSScriptRoot/../src/InternalTimeHelpers.ps1
 }
 
 

@@ -1,6 +1,6 @@
 BeforeAll {
-    . ..\src\New-ZbxJsonrpcRequest.ps1
-    . ..\src\Get-ZbxApiVersion.ps1    
+    . $PSScriptRoot/../src/New-ZbxJsonrpcRequest.ps1
+    . $PSScriptRoot/../src/Get-ZbxApiVersion.ps1    
 }
 
 Describe "Get-ZbxApiVersion" {

@@ -1,6 +1,6 @@
 BeforeAll {
-    . $PSScriptRoot\..\src\InternalTimeHelpers.ps1
-    . $PSScriptRoot\..\src\New-ZbxMaintenance.ps1
+    . $PSScriptRoot/../src/InternalTimeHelpers.ps1
+    . $PSScriptRoot/../src/New-ZbxMaintenance.ps1
 }
 
 

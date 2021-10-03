@@ -1,5 +1,5 @@
 BeforeAll {
-    . $PSScriptRoot\..\src\Remove-ZbxMaintenance.ps1
+    . $PSScriptRoot/../src/Remove-ZbxMaintenance.ps1
 }
 
 

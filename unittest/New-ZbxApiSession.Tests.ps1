@@ -1,7 +1,7 @@
 BeforeAll {
-    . $PSScriptRoot\..\src\New-ZbxJsonrpcRequest.ps1
-    . $PSScriptRoot\..\src\Get-ZbxApiVersion.ps1
-    . $PSScriptRoot\..\src\New-ZbxApiSession.ps1
+    . $PSScriptRoot/../src/New-ZbxJsonrpcRequest.ps1
+    . $PSScriptRoot/../src/Get-ZbxApiVersion.ps1
+    . $PSScriptRoot/../src/New-ZbxApiSession.ps1
 }
 
 
