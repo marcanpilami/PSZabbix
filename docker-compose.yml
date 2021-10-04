@@ -30,7 +30,13 @@ services:
       MYSQL_USER: "zabbix"
       MYSQL_PASSWORD: "zabbix_pwd"
       MYSQL_ROOT_PASSWORD: "zabbix_pwd"
+
+  pszabbix:
+    # image: "mcr.microsoft.com/powershell:latest"
+    build:
+      context: .devcontainer
+      dockerfile: .\pscoredev.Dockerfile
     environment:
-      DEV_ZABBIX_HOST: zabbix
-      DEV_ZABBIX_API_URL: "http://zabbix/api_jsonrpc.php"
+      DEV_ZABBIX_HOST: zabbix-web
+      DEV_ZABBIX_API_URL: "http://zabbix-web:8080/api_jsonrpc.php"
     command: /bin/sh -c "while sleep 1000; do :; done"
