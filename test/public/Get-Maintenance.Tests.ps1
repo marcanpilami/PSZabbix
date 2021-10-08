@@ -1,6 +1,6 @@
 BeforeAll {
     . $PSScriptRoot/../../src/public/Get-Maintenance.ps1
-    . $PSScriptRoot/../../src/public/InternalZabbixTypes.ps1
+    . $PSScriptRoot/../../src/private/InternalZabbixTypes.ps1
 }
 
 

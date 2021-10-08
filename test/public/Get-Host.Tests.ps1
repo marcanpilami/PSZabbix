@@ -1,6 +1,10 @@
 BeforeAll {
-    . $PSScriptRoot/../../src/public/Get-Host.ps1
-    . $PSScriptRoot/../../src/public/InternalZabbixTypes.ps1
+    Try {
+        . $PSScriptRoot/../../src/private/InternalZabbixTypes.ps1
+        . $PSScriptRoot/../../src/public/Get-Host.ps1
+    } Catch {
+        Write-Warning "Problem include? $_"
+    }
 }
 
 
