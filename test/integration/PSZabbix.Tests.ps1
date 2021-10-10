@@ -195,8 +195,6 @@ Describe "Get-Template" {
         $h = (Get-Template "Template OS Lin*")[0]
         (Get-Template -Id $h.templateid).host | Should Be $h.host
     }      
-        }      
-    }      
 }
 
 Describe "New-HostGroup" {
@@ -228,8 +226,6 @@ Describe "Get-HostGroup" {
     It "can filter by ID (explicit parameter)" {
         $h = (Get-HostGroup "pestertest*")[0]
         (Get-HostGroup -Id $h.groupid).name | Should Be $h.name
-    }      
-        }      
     }      
 }
 
@@ -275,8 +271,6 @@ Describe "Get-UserGroup" {
     It "can filter by ID (explicit parameter)" {
         $h = (Get-UserGroup "Zabbix*")[0]
         (Get-UserGroup -Id $h.usrgrpid).name | Should Be $h.name
-    }      
-        }      
     }      
 }
 
@@ -340,8 +334,6 @@ Describe "Get-User" {
     It "can filter by ID (explicit parameter)" {
         $h = (Get-User "Admin")[0]
         (Get-User -Id $h.userid).alias | Should Be $h.alias
-    }      
-        }      
     }      
 }
 
@@ -536,8 +528,6 @@ Describe "Get-MediaType" {
     It "can filter by technical media type" {
         Get-MediaType -type Email | Should Not BeNullOrEmpty
         Get-MediaType -type EzTexting | Should BeNullOrEmpty
-    }         
-        }         
     }         
 }
 
