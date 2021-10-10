@@ -1,20 +1,29 @@
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingConvertToSecureStringWithPlainText", "")]
 param()
+BeforeAll {
+    Try {
+        $moduleName = 'PSZabbix'
+        $moduleRoot = "$PSScriptRoot/../../"
+        Import-Module $moduleRoot/$moduleName.psd1 -Force
 
-$here = Split-Path -Parent $MyInvocation.MyCommand.Path
-$sut = (Split-Path -Leaf $MyInvocation.MyCommand.Path).Replace(".Tests.", ".").Replace(".ps1", ".psm1")
-
-$global:baseUrl = "http://tools/zabbix/api_jsonrpc.php"
-$secpasswd = ConvertTo-SecureString "zabbix" -AsPlainText -Force
-$global:admin = New-Object System.Management.Automation.PSCredential ("Admin", $secpasswd)
-
-$wrongsecpasswd = ConvertTo-SecureString "wrong" -AsPlainText -Force
-$global:admin2 = New-Object System.Management.Automation.PSCredential ("Admin", $wrongsecpasswd)
-
-Import-Module $here/$sut -Force
-
-InModuleScope PSZabbix {    
-    $s = New-ApiSession $baseUrl $global:admin -silent
+        $global:baseUrl = "http://tools/zabbix/api_jsonrpc.php"
+        $secpasswd = ConvertTo-SecureString "zabbix" -AsPlainText -Force
+        $global:admin = New-Object System.Management.Automation.PSCredential ("Admin", $secpasswd)
+        
+        $wrongsecpasswd = ConvertTo-SecureString "wrong" -AsPlainText -Force
+        $global:admin2 = New-Object System.Management.Automation.PSCredential ("Admin", $wrongsecpasswd)
+        
+        $s = New-ApiSession $baseUrl $global:admin -silent
+    } Catch {
+        $e = $_
+        Write-Warning "Error setup Tests $e $($_.exception)"
+        Throw $e
+    }
+    
+}
+AfterAll {
+    Remove-Module $moduleName
+}
     
     Describe "New-ApiSession" {
         $session = New-ApiSession $baseUrl $admin -silent
