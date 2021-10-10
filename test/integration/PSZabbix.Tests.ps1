@@ -26,7 +26,9 @@ AfterAll {
 }
     
     Describe "New-ApiSession" {
-        $session = New-ApiSession $baseUrl $admin -silent
+    BeforeAll {
+        $session = New-ApiSession $baseUrl $admin -silent        
+    }
 
         It "connects to zabbix and returns a non-empty session object" {
             $session | should Not Be $null
@@ -101,11 +103,12 @@ AfterAll {
         }
     }
 
-    Describe "Disable-Host"  {
+    BeforeAll {
         New-Host -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         New-Host -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         $h1 = get-host pestertesthost1
         $h2 = get-host pestertesthost2
+    }
 
         It "can enable multiple piped objects" {
             $h1,$h2 | Disable-host | should be @($h1.hostid, $h2.hostid)
@@ -121,11 +124,12 @@ AfterAll {
         }
     }
 
-    Describe "Enable-Host"  {
+    BeforeAll {
         New-Host -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         New-Host -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         $h1 = get-host pestertesthost1
         $h2 = get-host pestertesthost2
+    }
 
         It "can enable multiple piped objects" {
             $h1,$h2 | enable-host | should be @($h1.hostid, $h2.hostid)
@@ -142,6 +146,7 @@ AfterAll {
     }
 
     Describe "Add-HostGroupMembership" {
+    BeforeAll {
         New-Host -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         New-Host -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         $h1 = get-host pestertesthost1
@@ -150,6 +155,7 @@ AfterAll {
         New-HostGroup "pestertest2" -errorAction silentlycontinue
         $g1 = get-HostGroup pestertest1
         $g2 = get-HostGroup pestertest2
+    }
 
         It "adds a set of groups given as a parameter to multiple piped hosts" {
             $h1,$h2 | Add-HostGroupMembership $g1,$g2
@@ -158,6 +164,7 @@ AfterAll {
     }
 
     Describe "Remove-HostGroupMembership" {
+    BeforeAll {
         New-Host -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         New-Host -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         $h1 = get-host pestertesthost1
@@ -166,6 +173,7 @@ AfterAll {
         New-HostGroup "pestertest2" -errorAction silentlycontinue
         $g1 = get-HostGroup pestertest1
         $g2 = get-HostGroup pestertest2
+    }
 
         It "removes a set of groups given as a parameter to multiple piped hosts" {
             $h1,$h2 | Remove-HostGroupMembership $g1,$g2
@@ -549,9 +557,10 @@ AfterAll {
         }
     }
 
-    Describe "Disable-UserGroup"  {
+    BeforeAll {
         New-UserGroup -Name "pestertestenable1" -errorAction silentlycontinue
         $h1 = get-usergroup pestertestenable1
+    }
 
         It "can disable multiple piped objects" {
             $h1 | Disable-UserGroup | should be @($h1.usrgrpid)
@@ -559,9 +568,10 @@ AfterAll {
         }
     }
 
-    Describe "Enable-UserGroup"  {
+    BeforeAll {
         New-UserGroup -Name "pestertestenable1" -errorAction silentlycontinue
         $h1 = get-usergroup pestertestenable1
+    }
 
         It "can enable multiple piped objects" {
             $h1 | Enable-UserGroup | should be @($h1.usrgrpid)
@@ -570,10 +580,12 @@ AfterAll {
     }
 
     Describe "Update-Host" {
+    BeforeAll {
         $name = "pestertesthost$(Get-Random)"
         Get-Host -name "perster*" | remove-host
         Get-Host -name "newname" | remove-host
         $h = New-Host -Name $name -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+    }
 
         It "can update the name of a host" {
             $h.name = "newname"
