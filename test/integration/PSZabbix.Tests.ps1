@@ -13,7 +13,7 @@ BeforeAll {
         $wrongsecpasswd = ConvertTo-SecureString "wrong" -AsPlainText -Force
         $global:admin2 = New-Object System.Management.Automation.PSCredential ("Admin", $wrongsecpasswd)
         
-        $s = New-ApiSession $baseUrl $global:admin -silent
+        $s = New-ZbxApiSession $baseUrl $global:admin -silent
     } Catch {
         $e = $_
         Write-Warning "Error setup Tests $e $($_.exception)"
@@ -25,9 +25,9 @@ AfterAll {
     Remove-Module $moduleName
 }
 
-Describe "New-ApiSession" {
+Describe "New-ZbxApiSession" {
     BeforeAll {
-        $session = New-ApiSession $baseUrl $admin -silent        
+        $session = New-ZbxApiSession $baseUrl $admin -silent        
     }
 
     It "connects to zabbix and returns a non-empty session object" {
@@ -37,485 +37,485 @@ Describe "New-ApiSession" {
     }
 
     It "fails when URL is wrong" {
-        { New-ApiSession "http://localhost:12345/zabbix" $admin } | Should Throw
+        { New-ZbxApiSession "http://localhost:12345/zabbix" $admin } | Should Throw
     } -Skip
 
     It "fails when login/password is wrong" {
-        { New-ApiSession $baseUrl $admin2 } | Should Throw
+        { New-ZbxApiSession $baseUrl $admin2 } | Should Throw
     }
 }
 
-Describe "New-Host" {
+Describe "New-ZbxHost" {
     It "can create an enabled host from explicit ID parameters" {
-        $h = New-Host -Name "pestertesthost$(Get-Random)" -HostGroupId 2 -TemplateId 10108 -Dns localhost
+        $h = New-ZbxHost -Name "pestertesthost$(Get-Random)" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost
         $h | should not be $null
         $h.status | should be 0
     }
     It "can create an disabled host from explicit ID parameters" {
-        $h = New-Host -Name "pestertesthost$(Get-Random)" -HostGroupId 2 -TemplateId 10108 -Dns localhost -status disabled
+        $h = New-ZbxHost -Name "pestertesthost$(Get-Random)" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -status disabled
         $h | should not be $null
         $h.status | should be 1
     }
 }
 
-Describe "Get-Host" {
+Describe "Get-ZbxHost" {
     It "can return all hosts" {
-        Get-Host | Should Not BeNullOrEmpty
+        Get-ZbxHost | Should Not BeNullOrEmpty
     }
     It "can filter by name with wildcard (explicit parameter)" {
-        Get-Host "pestertesthost*" | Should Not BeNullOrEmpty
-        Get-Host "pestertesthostXXX*" | Should BeNullOrEmpty
+        Get-ZbxHost "pestertesthost*" | Should Not BeNullOrEmpty
+        Get-ZbxHost "pestertesthostXXX*" | Should BeNullOrEmpty
     }
     It "can filter by ID (explicit parameter)" {
-        $h = (Get-Host "pestertesthost*")[0]
-        (Get-Host -Id $h.hostid).host | Should Be $h.host
+        $h = (Get-ZbxHost "pestertesthost*")[0]
+        (Get-ZbxHost -Id $h.hostid).host | Should Be $h.host
     }
     It "can filter by group membership (explicit parameter)" {
-        $h = (Get-Host "pestertesthost*")[0]
-        (Get-Host -Id $h.hostid -HostGroupId 2).host | Should Be $h.host
+        $h = (Get-ZbxHost "pestertesthost*")[0]
+        (Get-ZbxHost -Id $h.hostid -ZbxHostGroupId 2).host | Should Be $h.host
     }
 }
 
-Describe "Remove-Host" {
+Describe "Remove-ZbxHost" {
     It "can delete from one explicit ID parameter" {
-        New-Host -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        $h = Get-Host pestertesthostrem
-        remove-Host $h.hostid | should be $h.hostid
+        New-ZbxHost -Name "pestertesthostrem" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        $h = Get-ZbxHost pestertesthostrem
+        remove-ZbxHost $h.hostid | should be $h.hostid
     }
     It "can delete from multiple explicit ID parameters" {
-        $h1 = New-Host -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
-        $h2 = New-Host -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        remove-Host $h1.hostid, $h2.hostid | should be @($h1.hostid, $h2.hostid)
+        $h1 = New-ZbxHost -Name "pestertesthostrem" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost
+        $h2 = New-ZbxHost -Name "pestertesthostrem2" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        remove-ZbxHost $h1.hostid, $h2.hostid | should be @($h1.hostid, $h2.hostid)
     }
     It "can delete from multiple piped IDs" {
-        $h1 = New-Host -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
-        $h2 = New-Host -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId 10108 -Dns localhost
-        $h1.hostid, $h2.hostid | remove-Host | should be @($h1.hostid, $h2.hostid)
+        $h1 = New-ZbxHost -Name "pestertesthostrem" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost
+        $h2 = New-ZbxHost -Name "pestertesthostrem2" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost
+        $h1.hostid, $h2.hostid | remove-ZbxHost | should be @($h1.hostid, $h2.hostid)
     }
     It "can delete from one piped object parameter" {
-        $h = New-Host -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
-        $h | remove-Host | should be $h.hostid
+        $h = New-ZbxHost -Name "pestertesthostrem" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost
+        $h | remove-ZbxHost | should be $h.hostid
     }
     It "can delete from multiple piped objects" {
-        $h1 = New-Host -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
-        $h2 = New-Host -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId 10108 -Dns localhost
-        $h1, $h2 | remove-Host | should be @($h1.hostid, $h2.hostid)
+        $h1 = New-ZbxHost -Name "pestertesthostrem" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost
+        $h2 = New-ZbxHost -Name "pestertesthostrem2" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost
+        $h1, $h2 | remove-ZbxHost | should be @($h1.hostid, $h2.hostid)
     }
 }
 
-Describe "Disable-Host" {
+Describe "Disable-ZbxHost" {
     BeforeAll {
-        New-Host -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-Host -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        $h1 = get-host pestertesthost1
-        $h2 = get-host pestertesthost2
+        New-ZbxHost -Name "pestertesthost1" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost2" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        $h1 = Get-ZbxHost pestertesthost1
+        $h2 = Get-ZbxHost pestertesthost2
     }
 
     It "can enable multiple piped objects" {
-        $h1, $h2 | Disable-host | should be @($h1.hostid, $h2.hostid)
-        (get-host pestertesthost1).status | should be 1
+        $h1, $h2 | Disable-ZbxHost | should be @($h1.hostid, $h2.hostid)
+        (Get-ZbxHost pestertesthost1).status | should be 1
     }
     It "can enable multiple piped IDs" {
-        $h1.hostid, $h2.hostid | Disable-host | should be @($h1.hostid, $h2.hostid)
-        (get-host pestertesthost1).status | should be 1
+        $h1.hostid, $h2.hostid | Disable-ZbxHost | should be @($h1.hostid, $h2.hostid)
+        (Get-ZbxHost pestertesthost1).status | should be 1
     }
     It "can enable multiple explicit parameter IDs" {
-        Disable-host $h1.hostid, $h2.hostid | should be @($h1.hostid, $h2.hostid)
-        (get-host pestertesthost1).status | should be 1
+        Disable-ZbxHost $h1.hostid, $h2.hostid | should be @($h1.hostid, $h2.hostid)
+        (Get-ZbxHost pestertesthost1).status | should be 1
     }
 }
 
-Describe "Enable-Host" {
+Describe "Enable-ZbxHost" {
     BeforeAll {
-        New-Host -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-Host -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        $h1 = get-host pestertesthost1
-        $h2 = get-host pestertesthost2
+        New-ZbxHost -Name "pestertesthost1" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost2" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        $h1 = Get-ZbxHost pestertesthost1
+        $h2 = Get-ZbxHost pestertesthost2
     }
 
     It "can enable multiple piped objects" {
-        $h1, $h2 | enable-host | should be @($h1.hostid, $h2.hostid)
-        (get-host pestertesthost1).status | should be 0
+        $h1, $h2 | Enable-ZbxHost | should be @($h1.hostid, $h2.hostid)
+        (Get-ZbxHost pestertesthost1).status | should be 0
     }
     It "can enable multiple piped IDs" {
-        $h1.hostid, $h2.hostid | enable-host | should be @($h1.hostid, $h2.hostid)
-        (get-host pestertesthost1).status | should be 0
+        $h1.hostid, $h2.hostid | Enable-ZbxHost | should be @($h1.hostid, $h2.hostid)
+        (Get-ZbxHost pestertesthost1).status | should be 0
     }
     It "can enable multiple explicit parameter IDs" {
-        enable-host $h1.hostid, $h2.hostid | should be @($h1.hostid, $h2.hostid)
-        (get-host pestertesthost1).status | should be 0
+        Enable-ZbxHost $h1.hostid, $h2.hostid | should be @($h1.hostid, $h2.hostid)
+        (Get-ZbxHost pestertesthost1).status | should be 0
     }
 }
 
-Describe "Add-HostGroupMembership" {
+Describe "Add-ZbxHostGroupMembership" {
     BeforeAll {
-        New-Host -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-Host -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        $h1 = get-host pestertesthost1
-        $h2 = get-host pestertesthost2
-        New-HostGroup "pestertest1" -errorAction silentlycontinue
-        New-HostGroup "pestertest2" -errorAction silentlycontinue
-        $g1 = get-HostGroup pestertest1
-        $g2 = get-HostGroup pestertest2
+        New-ZbxHost -Name "pestertesthost1" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost2" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        $h1 = Get-ZbxHost pestertesthost1
+        $h2 = Get-ZbxHost pestertesthost2
+        New-ZbxHostGroup "pestertest1" -errorAction silentlycontinue
+        New-ZbxHostGroup "pestertest2" -errorAction silentlycontinue
+        $g1 = Get-ZbxHostGroup pestertest1
+        $g2 = Get-ZbxHostGroup pestertest2
     }
 
     It "adds a set of groups given as a parameter to multiple piped hosts" {
-        $h1, $h2 | Add-HostGroupMembership $g1, $g2
-        (get-HostGroup pestertest1).hosts.Count | should be 2
+        $h1, $h2 | Add-ZbxHostGroupMembership $g1, $g2
+        (Get-ZbxHostGroup pestertest1).hosts.Count | should be 2
     }
 }
 
-Describe "Remove-HostGroupMembership" {
+Describe "Remove-ZbxHostGroupMembership" {
     BeforeAll {
-        New-Host -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-Host -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        $h1 = get-host pestertesthost1
-        $h2 = get-host pestertesthost2
-        New-HostGroup "pestertest1" -errorAction silentlycontinue
-        New-HostGroup "pestertest2" -errorAction silentlycontinue
-        $g1 = get-HostGroup pestertest1
-        $g2 = get-HostGroup pestertest2
+        New-ZbxHost -Name "pestertesthost1" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost2" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        $h1 = Get-ZbxHost pestertesthost1
+        $h2 = Get-ZbxHost pestertesthost2
+        New-ZbxHostGroup "pestertest1" -errorAction silentlycontinue
+        New-ZbxHostGroup "pestertest2" -errorAction silentlycontinue
+        $g1 = Get-ZbxHostGroup pestertest1
+        $g2 = Get-ZbxHostGroup pestertest2
     }
 
     It "removes a set of groups given as a parameter to multiple piped hosts" {
-        $h1, $h2 | Remove-HostGroupMembership $g1, $g2
-        (get-HostGroup pestertest1).hosts.Count | should be 0
+        $h1, $h2 | Remove-ZbxHostGroupMembership $g1, $g2
+        (Get-ZbxHostGroup pestertest1).hosts.Count | should be 0
     }
 }
 
-Describe "Get-Template" {
+Describe "Get-ZbxTemplate" {
     It "can return all templates" {
-        Get-Template | Should Not BeNullOrEmpty
+        Get-ZbxTemplate | Should Not BeNullOrEmpty
     }
     It "can filter by name with wildcard (explicit parameter)" {
-        Get-Template "Template OS Lin*" | Should Not BeNullOrEmpty
-        Get-Template "XXXXXXXXXXXXXX" | Should BeNullOrEmpty
+        Get-ZbxTemplate "Template OS Lin*" | Should Not BeNullOrEmpty
+        Get-ZbxTemplate "XXXXXXXXXXXXXX" | Should BeNullOrEmpty
     }
     It "can filter by ID (explicit parameter)" {
-        $h = (Get-Template "Template OS Lin*")[0]
-        (Get-Template -Id $h.templateid).host | Should Be $h.host
+        $h = (Get-ZbxTemplate "Template OS Lin*")[0]
+        (Get-ZbxTemplate -Id $h.templateid).host | Should Be $h.host
     }      
 }
 
-Describe "New-HostGroup" {
+Describe "New-ZbxHostGroup" {
     It "creates a new group with explicit name parameter" {
-        $g = New-HostGroup "pestertest$(Get-Random)", "pestertest$(Get-Random)"
+        $g = New-ZbxHostGroup "pestertest$(Get-Random)", "pestertest$(Get-Random)"
         $g.count | should be 2
         $g[0].name | should match "pestertest"
     }
     It "creates a new group with piped names" {
-        $g = "pestertest$(Get-Random)", "pestertest$(Get-Random)" | New-HostGroup
+        $g = "pestertest$(Get-Random)", "pestertest$(Get-Random)" | New-ZbxHostGroup
         $g.count | should be 2
         $g[0].name | should match "pestertest"
     }
     It "creates a new group with piped objects" {
-        $g = (New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)" }), (New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)" }) | New-HostGroup
+        $g = (New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)" }), (New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)" }) | New-ZbxHostGroup
         $g.count | should be 2
         $g[0].name | should match "pestertest"
     }
 }
 
-Describe "Get-HostGroup" {
+Describe "Get-ZbxHostGroup" {
     It "can return all groups" {
-        Get-HostGroup | Should Not BeNullOrEmpty
+        Get-ZbxHostGroup | Should Not BeNullOrEmpty
     }
     It "can filter by name with wildcard (explicit parameter)" {
-        Get-HostGroup "pestertest*" | Should Not BeNullOrEmpty
-        Get-HostGroup "XXXXXXXXXXXXXX" | Should BeNullOrEmpty
+        Get-ZbxHostGroup "pestertest*" | Should Not BeNullOrEmpty
+        Get-ZbxHostGroup "XXXXXXXXXXXXXX" | Should BeNullOrEmpty
     }
     It "can filter by ID (explicit parameter)" {
-        $h = (Get-HostGroup "pestertest*")[0]
-        (Get-HostGroup -Id $h.groupid).name | Should Be $h.name
+        $h = (Get-ZbxHostGroup "pestertest*")[0]
+        (Get-ZbxHostGroup -Id $h.groupid).name | Should Be $h.name
     }      
 }
 
-Describe "Remove-HostGroup" {
+Describe "Remove-ZbxHostGroup" {
     It "can delete from one explicit ID parameter" {
-        New-HostGroup -Name "pestertestrem" -errorAction silentlycontinue
-        $h = Get-HostGroup pestertestrem
-        remove-HostGroup $h.groupid | should be $h.groupid
-        Get-HostGroup pestertestrem | should Throw
+        New-ZbxHostGroup -Name "pestertestrem" -errorAction silentlycontinue
+        $h = Get-ZbxHostGroup pestertestrem
+        remove-ZbxHostGroup $h.groupid | should be $h.groupid
+        Get-ZbxHostGroup pestertestrem | should Throw
     }
     It "can delete from multiple explicit ID parameters" {
-        $h1 = New-HostGroup -Name "pestertestrem"
-        $h2 = New-HostGroup -Name "pestertestrem2" -errorAction silentlycontinue
-        $h2 = get-Hostgroup pestertestrem2
-        remove-Hostgroup $h1.groupid, $h2.groupid | should be @($h1.groupid, $h2.groupid)
-        Get-HostGroup pestertestrem | should Throw
-        Get-HostGroup pestertestrem2 | should Throw
+        $h1 = New-ZbxHostGroup -Name "pestertestrem"
+        $h2 = New-ZbxHostGroup -Name "pestertestrem2" -errorAction silentlycontinue
+        $h2 = Get-ZbxHostgroup pestertestrem2
+        remove-ZbxHostgroup $h1.groupid, $h2.groupid | should be @($h1.groupid, $h2.groupid)
+        Get-ZbxHostGroup pestertestrem | should Throw
+        Get-ZbxHostGroup pestertestrem2 | should Throw
     }
     It "can delete from multiple piped IDs" {
-        $h1 = New-HostGroup -Name "pestertestrem"
-        $h2 = New-HostGroup -Name "pestertestrem2"
-        $h1.groupid, $h2.groupid | remove-Hostgroup | should be @($h1.groupid, $h2.groupid)
+        $h1 = New-ZbxHostGroup -Name "pestertestrem"
+        $h2 = New-ZbxHostGroup -Name "pestertestrem2"
+        $h1.groupid, $h2.groupid | remove-ZbxHostgroup | should be @($h1.groupid, $h2.groupid)
     }
     It "can delete from one piped object parameter" {
-        $h = New-HostGroup -Name "pestertestrem"
-        $h | remove-Hostgroup | should be $h.groupid
+        $h = New-ZbxHostGroup -Name "pestertestrem"
+        $h | remove-ZbxHostgroup | should be $h.groupid
     }
     It "can delete from multiple piped objects" {
-        $h1 = New-HostGroup -Name "pestertestrem"
-        $h2 = New-HostGroup -Name "pestertestrem2"
-        $h1, $h2 | remove-Hostgroup | should be @($h1.groupid, $h2.groupid)
+        $h1 = New-ZbxHostGroup -Name "pestertestrem"
+        $h2 = New-ZbxHostGroup -Name "pestertestrem2"
+        $h1, $h2 | remove-ZbxHostgroup | should be @($h1.groupid, $h2.groupid)
     }
 }
 
-Describe "Get-UserGroup" {
+Describe "Get-ZbxUserGroup" {
     It "can return all groups" {
-        Get-UserGroup | Should Not BeNullOrEmpty
+        Get-ZbxUserGroup | Should Not BeNullOrEmpty
     }
     It "can filter by name with wildcard (explicit parameter)" {
-        Get-UserGroup "Zabbix*" | Should Not BeNullOrEmpty
-        Get-UserGroup "XXXXXXXXXXXXXX" | Should BeNullOrEmpty
+        Get-ZbxUserGroup "Zabbix*" | Should Not BeNullOrEmpty
+        Get-ZbxUserGroup "XXXXXXXXXXXXXX" | Should BeNullOrEmpty
     }
     It "can filter by ID (explicit parameter)" {
-        $h = (Get-UserGroup "Zabbix*")[0]
-        (Get-UserGroup -Id $h.usrgrpid).name | Should Be $h.name
+        $h = (Get-ZbxUserGroup "Zabbix*")[0]
+        (Get-ZbxUserGroup -Id $h.usrgrpid).name | Should Be $h.name
     }      
 }
 
-Describe "New-UserGroup" {
+Describe "New-ZbxUserGroup" {
     It "creates a new group with explicit name parameter" {
-        $g = New-UserGroup "pestertest$(Get-Random)", "pestertest$(Get-Random)"
+        $g = New-ZbxUserGroup "pestertest$(Get-Random)", "pestertest$(Get-Random)"
         $g.count | should be 2
         $g[0].name | should match "pestertest"
     }
     It "creates a new group with piped names" {
-        $g = "pestertest$(Get-Random)", "pestertest$(Get-Random)" | New-UserGroup
+        $g = "pestertest$(Get-Random)", "pestertest$(Get-Random)" | New-ZbxUserGroup
         $g.count | should be 2
         $g[0].name | should match "pestertest"
     }
     It "creates a new group with piped objects" {
-        $g = (New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)" }), (New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)" }) | New-UserGroup
+        $g = (New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)" }), (New-Object -TypeName PSCustomObject -Property @{name = "pestertest$(Get-Random)" }) | New-ZbxUserGroup
         $g.count | should be 2
         $g[0].name | should match "pestertest"
     }
 }
 
-Describe "Remove-UserGroup" {
+Describe "Remove-ZbxUserGroup" {
     It "can delete from one explicit ID parameter" {
-        New-UserGroup -Name "pestertestrem" -errorAction silentlycontinue
-        $h = Get-UserGroup pestertestrem
-        Remove-UserGroup $h.usrgrpid | should be $h.usrgrpid
-        Get-UserGroup pestertestrem | should Throw
+        New-ZbxUserGroup -Name "pestertestrem" -errorAction silentlycontinue
+        $h = Get-ZbxUserGroup pestertestrem
+        Remove-ZbxUserGroup $h.usrgrpid | should be $h.usrgrpid
+        Get-ZbxUserGroup pestertestrem | should Throw
     }
     It "can delete from multiple explicit ID parameters" {
-        $h1 = New-UserGroup -Name "pestertestrem"
-        $h2 = New-UserGroup -Name "pestertestrem2" -errorAction silentlycontinue
-        $h2 = get-Usergroup pestertestrem2
-        remove-usergroup $h1.usrgrpid, $h2.usrgrpid | should be @($h1.usrgrpid, $h2.usrgrpid)
-        Get-UserGroup pestertestrem | should Throw
-        Get-UserGroup pestertestrem2 | should Throw
+        $h1 = New-ZbxUserGroup -Name "pestertestrem"
+        $h2 = New-ZbxUserGroup -Name "pestertestrem2" -errorAction silentlycontinue
+        $h2 = Get-ZbxUserGroup pestertestrem2
+        remove-ZbxUserGroup $h1.usrgrpid, $h2.usrgrpid | should be @($h1.usrgrpid, $h2.usrgrpid)
+        Get-ZbxUserGroup pestertestrem | should Throw
+        Get-ZbxUserGroup pestertestrem2 | should Throw
     }
     It "can delete from multiple piped IDs" {
-        $h1 = New-UserGroup -Name "pestertestrem"
-        $h2 = New-UserGroup -Name "pestertestrem2"
-        $h1.usrgrpid, $h2.usrgrpid | remove-usergroup | should be @($h1.usrgrpid, $h2.usrgrpid)
+        $h1 = New-ZbxUserGroup -Name "pestertestrem"
+        $h2 = New-ZbxUserGroup -Name "pestertestrem2"
+        $h1.usrgrpid, $h2.usrgrpid | remove-ZbxUserGroup | should be @($h1.usrgrpid, $h2.usrgrpid)
     }
     It "can delete from one piped object parameter" {
-        $h = New-UserGroup -Name "pestertestrem"
-        $h | remove-Usergroup | should be $h.usrgrpid
+        $h = New-ZbxUserGroup -Name "pestertestrem"
+        $h | remove-ZbxUserGroup | should be $h.usrgrpid
     }
     It "can delete from multiple piped objects" {
-        $h1 = New-UserGroup -Name "pestertestrem"
-        $h2 = New-UserGroup -Name "pestertestrem2"
-        $h1, $h2 | remove-Usergroup | should be @($h1.usrgrpid, $h2.usrgrpid)
+        $h1 = New-ZbxUserGroup -Name "pestertestrem"
+        $h2 = New-ZbxUserGroup -Name "pestertestrem2"
+        $h1, $h2 | remove-ZbxUserGroup | should be @($h1.usrgrpid, $h2.usrgrpid)
     }
 }
 
-Describe "Get-User" {
+Describe "Get-ZbxUser" {
     It "can return all users" {
-        Get-User | Should Not BeNullOrEmpty
+        Get-ZbxUser | Should Not BeNullOrEmpty
     }
     It "can filter by name with wildcard (explicit parameter)" {
-        Get-User "Admi*" | Should Not BeNullOrEmpty
-        Get-User "XXXXXXXXXXXXXX" | Should BeNullOrEmpty
+        Get-ZbxUser "Admi*" | Should Not BeNullOrEmpty
+        Get-ZbxUser "XXXXXXXXXXXXXX" | Should BeNullOrEmpty
     }
     It "can filter by ID (explicit parameter)" {
-        $h = (Get-User "Admin")[0]
-        (Get-User -Id $h.userid).alias | Should Be $h.alias
+        $h = (Get-ZbxUser "Admin")[0]
+        (Get-ZbxUser -Id $h.userid).alias | Should Be $h.alias
     }      
 }
 
-Describe "New-User" {
+Describe "New-ZbxUser" {
     It "creates a new user with explicit parameters" {
-        $g = @(New-User -Alias "pestertest$(get-random)" -name "marsu" -UserGroupId 8)
+        $g = @(New-ZbxUser -Alias "pestertest$(Get-random)" -name "marsu" -ZbxUserGroupId 8)
         $g.count | should be 1
         $g[0].name | should match "marsu"
     }
     It "creates a new user from another user (copy)" {
-        $u = @(New-User -Alias "pestertest$(get-random)" -name "marsu" -UserGroupId 8)
-        $g = $u | new-user -alias "pestertest$(get-random)"
+        $u = @(New-ZbxUser -Alias "pestertest$(Get-random)" -name "marsu" -ZbxUserGroupId 8)
+        $g = $u | New-ZbxUser -alias "pestertest$(Get-random)"
         $g.userid | should Not Be $null
         $g.name | should match "marsu"
         $g.usrgrps.usrgrpid | should be 8
     }
 }
 
-Describe "Remove-User" {
+Describe "Remove-ZbxUser" {
     It "can delete from one explicit ID parameter" {
-        New-User -Alias "pestertestrem" -UserGroupId 8 -errorAction silentlycontinue
-        $h = Get-User pestertestrem
-        Remove-User $h.userid | should be $h.userid
-        Get-User pestertestrem | should Throw
+        New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 -errorAction silentlycontinue
+        $h = Get-ZbxUser pestertestrem
+        Remove-ZbxUser $h.userid | should be $h.userid
+        Get-ZbxUser pestertestrem | should Throw
     }
     It "can delete from multiple explicit ID parameters" {
-        $h1 = New-User -Alias "pestertestrem" -UserGroupId 8 
-            $h1 = New-User -Alias "pestertestrem" -UserGroupId 8 
-        $h1 = New-User -Alias "pestertestrem" -UserGroupId 8 
-        $h2 = New-User -Alias "pestertestrem2" -UserGroupId 8  -errorAction silentlycontinue
-        $h2 = get-User pestertestrem2
-        remove-user $h1.userid, $h2.userid | should be @($h1.userid, $h2.userid)
-        Get-User pestertestrem | should Throw
-        Get-User pestertestrem2 | should Throw
+        $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
+            $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
+        $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
+        $h2 = New-ZbxUser -Alias "pestertestrem2" -ZbxUserGroupId 8  -errorAction silentlycontinue
+        $h2 = Get-ZbxUser pestertestrem2
+        Remove-ZbxUser $h1.userid, $h2.userid | should be @($h1.userid, $h2.userid)
+        Get-ZbxUser pestertestrem | should Throw
+        Get-ZbxUser pestertestrem2 | should Throw
     }
     It "can delete from multiple piped IDs" {
-        $h1 = New-User -Alias "pestertestrem" -UserGroupId 8 
-            $h1 = New-User -Alias "pestertestrem" -UserGroupId 8 
-        $h1 = New-User -Alias "pestertestrem" -UserGroupId 8 
-        $h2 = New-User -Alias "pestertestrem2" -UserGroupId 8 
-        $h1.userid, $h2.userid | remove-user | should be @($h1.userid, $h2.userid)
+        $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
+            $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
+        $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
+        $h2 = New-ZbxUser -Alias "pestertestrem2" -ZbxUserGroupId 8 
+        $h1.userid, $h2.userid | Remove-ZbxUser | should be @($h1.userid, $h2.userid)
     }
     It "can delete from one piped object parameter" {
-        $h = New-User -Alias "pestertestrem" -UserGroupId 8 
-        $h | remove-User | should be $h.userid
+        $h = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
+        $h | Remove-ZbxUser | should be $h.userid
     }
     It "can delete from multiple piped objects" {
-        $h1 = New-User -Alias "pestertestrem" -UserGroupId 8 
-            $h1 = New-User -Alias "pestertestrem" -UserGroupId 8 
-        $h1 = New-User -Alias "pestertestrem" -UserGroupId 8 
-        $h2 = New-User -Alias "pestertestrem2" -UserGroupId 8 
-        $h1, $h2 | remove-User | should be @($h1.userid, $h2.userid)
+        $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
+            $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
+        $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
+        $h2 = New-ZbxUser -Alias "pestertestrem2" -ZbxUserGroupId 8 
+        $h1, $h2 | Remove-ZbxUser | should be @($h1.userid, $h2.userid)
     }
 }
 
-Describe "Add-UserGroupMembership" {
+Describe "Add-ZbxUserGroupMembership" {
     It "can add two user groups (explicit parameter) to piped users" {
-        Get-User "pester*" | remove-User
-        Get-UserGroup "pester*" | remove-UserGroup
+        Get-ZbxUser "pester*" | Remove-ZbxUser
+        Get-ZbxUserGroup "pester*" | remove-ZbxUserGroup
 
-        $g1 = New-UserGroup -Name "pestertestmembers"
-        $g2 = New-UserGroup -Name "pestertestmembers2"
-        $g1 = get-Usergroup pestertestmembers
-        $g2 = get-Usergroup pestertestmembers2
+        $g1 = New-ZbxUserGroup -Name "pestertestmembers"
+        $g2 = New-ZbxUserGroup -Name "pestertestmembers2"
+        $g1 = Get-ZbxUserGroup pestertestmembers
+        $g2 = Get-ZbxUserGroup pestertestmembers2
 
-        $u1 = New-User -Alias "pestertestrem" -UserGroupId 8
-        $u2 = New-User -Alias "pestertestrem2" -UserGroupId 8
-        $u1 = get-User pestertestrem
-        $u2 = get-User pestertestrem2
+        $u1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8
+        $u2 = New-ZbxUser -Alias "pestertestrem2" -ZbxUserGroupId 8
+        $u1 = Get-ZbxUser pestertestrem
+        $u2 = Get-ZbxUser pestertestrem2
 
-        $u1, $u2 | Add-UserGroupMembership $g1, $g2 | should be @($u1.userid, $u2.userid)
-        $u1 = get-User pestertestrem
-        $u2 = get-User pestertestrem2
+        $u1, $u2 | Add-ZbxUserGroupMembership $g1, $g2 | should be @($u1.userid, $u2.userid)
+        $u1 = Get-ZbxUser pestertestrem
+        $u2 = Get-ZbxUser pestertestrem2
         $u1.usrgrps | select -ExpandProperty usrgrpid | Should Be @(8, $g1.usrgrpid, $g2.usrgrpid)
     }
     It "same with ID instead of objects" {
-        Get-User "pester*" | remove-User
-        Get-UserGroup "pester*" | remove-UserGroup
+        Get-ZbxUser "pester*" | Remove-ZbxUser
+        Get-ZbxUserGroup "pester*" | remove-ZbxUserGroup
 
-        $g1 = New-UserGroup -Name "pestertestmembers3"
-        $g2 = New-UserGroup -Name "pestertestmembers4"
-        $g1 = get-Usergroup pestertestmembers3
-        $g2 = get-Usergroup pestertestmembers4
+        $g1 = New-ZbxUserGroup -Name "pestertestmembers3"
+        $g2 = New-ZbxUserGroup -Name "pestertestmembers4"
+        $g1 = Get-ZbxUserGroup pestertestmembers3
+        $g2 = Get-ZbxUserGroup pestertestmembers4
 
-        $u1 = New-User -Alias "pestertestrem3" -UserGroupId 8
-        $u2 = New-User -Alias "pestertestrem4" -UserGroupId 8
-        $u1 = get-User pestertestrem3
-        $u2 = get-User pestertestrem4
+        $u1 = New-ZbxUser -Alias "pestertestrem3" -ZbxUserGroupId 8
+        $u2 = New-ZbxUser -Alias "pestertestrem4" -ZbxUserGroupId 8
+        $u1 = Get-ZbxUser pestertestrem3
+        $u2 = Get-ZbxUser pestertestrem4
 
-        $u1.userid, $u2.userid | Add-UserGroupMembership $g1.usrgrpid, $g2.usrgrpid | should be @($u1.userid, $u2.userid)
-        $u1 = get-User pestertestrem3
-        $u2 = get-User pestertestrem4
+        $u1.userid, $u2.userid | Add-ZbxUserGroupMembership $g1.usrgrpid, $g2.usrgrpid | should be @($u1.userid, $u2.userid)
+        $u1 = Get-ZbxUser pestertestrem3
+        $u2 = Get-ZbxUser pestertestrem4
         $u1.usrgrps | select -ExpandProperty usrgrpid | Should Be @(8, $g1.usrgrpid, $g2.usrgrpid)
     }
 }
 
-Describe "Remove-UserGroupMembership" {
+Describe "Remove-ZbxUserGroupMembership" {
     It "can remove two user groups (explicit parameter) to piped users" {
-        Get-User "pester*" | remove-User
-        Get-UserGroup "pester*" | remove-UserGroup
+        Get-ZbxUser "pester*" | Remove-ZbxUser
+        Get-ZbxUserGroup "pester*" | remove-ZbxUserGroup
 
-        $g1 = New-UserGroup -Name "pestertestmembers"
-        $g2 = New-UserGroup -Name "pestertestmembers2"
-        $g1 = get-Usergroup pestertestmembers
-        $g2 = get-Usergroup pestertestmembers2
+        $g1 = New-ZbxUserGroup -Name "pestertestmembers"
+        $g2 = New-ZbxUserGroup -Name "pestertestmembers2"
+        $g1 = Get-ZbxUserGroup pestertestmembers
+        $g2 = Get-ZbxUserGroup pestertestmembers2
 
-        $u1 = New-User -Alias "pestertestrem" -UserGroupId 8
-        $u2 = New-User -Alias "pestertestrem2" -UserGroupId 8
-        $u1 = get-User pestertestrem
-        $u2 = get-User pestertestrem2
+        $u1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8
+        $u2 = New-ZbxUser -Alias "pestertestrem2" -ZbxUserGroupId 8
+        $u1 = Get-ZbxUser pestertestrem
+        $u2 = Get-ZbxUser pestertestrem2
 
-        $u1, $u2 | Add-UserGroupMembership $g1, $g2 | should be @($u1.userid, $u2.userid)
-        $u1, $u2 | Remove-UserGroupMembership $g1, $g2 | should be @($u1.userid, $u2.userid)
-        $u1 = get-User pestertestrem
-        $u2 = get-User pestertestrem2
+        $u1, $u2 | Add-ZbxUserGroupMembership $g1, $g2 | should be @($u1.userid, $u2.userid)
+        $u1, $u2 | Remove-ZbxUserGroupMembership $g1, $g2 | should be @($u1.userid, $u2.userid)
+        $u1 = Get-ZbxUser pestertestrem
+        $u2 = Get-ZbxUser pestertestrem2
         $u1.usrgrps | select -ExpandProperty usrgrpid | Should Be @(8)
     }
     It "same with ID instead of objects" {
-        Get-User "pester*" | remove-User
-        Get-UserGroup "pester*" | remove-UserGroup
+        Get-ZbxUser "pester*" | Remove-ZbxUser
+        Get-ZbxUserGroup "pester*" | remove-ZbxUserGroup
 
-        $g1 = New-UserGroup -Name "pestertestmembers3"
-        $g2 = New-UserGroup -Name "pestertestmembers4"
-        $g1 = get-Usergroup pestertestmembers3
-        $g2 = get-Usergroup pestertestmembers4
+        $g1 = New-ZbxUserGroup -Name "pestertestmembers3"
+        $g2 = New-ZbxUserGroup -Name "pestertestmembers4"
+        $g1 = Get-ZbxUserGroup pestertestmembers3
+        $g2 = Get-ZbxUserGroup pestertestmembers4
 
-        $u1 = New-User -Alias "pestertestrem3" -UserGroupId 8
-        $u2 = New-User -Alias "pestertestrem4" -UserGroupId 8
-        $u1 = get-User pestertestrem3
-        $u2 = get-User pestertestrem4
+        $u1 = New-ZbxUser -Alias "pestertestrem3" -ZbxUserGroupId 8
+        $u2 = New-ZbxUser -Alias "pestertestrem4" -ZbxUserGroupId 8
+        $u1 = Get-ZbxUser pestertestrem3
+        $u2 = Get-ZbxUser pestertestrem4
 
-        $u1.userid, $u2.userid | Add-UserGroupMembership $g1.usrgrpid, $g2.usrgrpid | should be @($u1.userid, $u2.userid)
-        $u1 = get-User pestertestrem3
-        $u2 = get-User pestertestrem4
+        $u1.userid, $u2.userid | Add-ZbxUserGroupMembership $g1.usrgrpid, $g2.usrgrpid | should be @($u1.userid, $u2.userid)
+        $u1 = Get-ZbxUser pestertestrem3
+        $u2 = Get-ZbxUser pestertestrem4
         $u1.usrgrps | select -ExpandProperty usrgrpid | Should Be @(8, $g1.usrgrpid, $g2.usrgrpid)
-        $u1.userid, $u2.userid | Remove-UserGroupMembership $g1.usrgrpid, $g2.usrgrpid | should be @($u1.userid, $u2.userid)
-        $u1 = get-User pestertestrem3
-        $u2 = get-User pestertestrem4
+        $u1.userid, $u2.userid | Remove-ZbxUserGroupMembership $g1.usrgrpid, $g2.usrgrpid | should be @($u1.userid, $u2.userid)
+        $u1 = Get-ZbxUser pestertestrem3
+        $u2 = Get-ZbxUser pestertestrem4
         $u1.usrgrps | select -ExpandProperty usrgrpid | Should Be @(8)
     }
 }
 
-Describe "Add-UserGroupPermission" {
+Describe "Add-ZbxUserGroupPermission" {
     It "can add a Read permission to two piped user groups on two host groups" {
-        Get-HostGroup "pester*" | remove-HostGroup
-        Get-UserGroup "pester*" | remove-UserGroup
+        Get-ZbxHostGroup "pester*" | remove-ZbxHostGroup
+        Get-ZbxUserGroup "pester*" | remove-ZbxUserGroup
 
-        New-UserGroup -Name "pestertest1", "pestertest2"
-        $ug1 = get-Usergroup pestertest1
-        $ug2 = get-Usergroup pestertest2
+        New-ZbxUserGroup -Name "pestertest1", "pestertest2"
+        $ug1 = Get-ZbxUserGroup pestertest1
+        $ug2 = Get-ZbxUserGroup pestertest2
 
-        New-HostGroup "pestertest1", "pestertest2"
-        $hg1 = get-HostGroup pestertest1
-        $hg2 = get-HostGroup pestertest2
+        New-ZbxHostGroup "pestertest1", "pestertest2"
+        $hg1 = Get-ZbxHostGroup pestertest1
+        $hg2 = Get-ZbxHostGroup pestertest2
 
-        $ug1, $ug2 | Add-UserGroupPermission $hg1, $hg2 ReadWrite | should be @($ug1.usrgrpid, $ug2.usrgrpid)
-        $ug1 = get-Usergroup pestertest1
-        $ug2 = get-Usergroup pestertest2
+        $ug1, $ug2 | Add-ZbxUserGroupPermission $hg1, $hg2 ReadWrite | should be @($ug1.usrgrpid, $ug2.usrgrpid)
+        $ug1 = Get-ZbxUserGroup pestertest1
+        $ug2 = Get-ZbxUserGroup pestertest2
         $ug1.rights | select -ExpandProperty id | Should Be @($hg1.groupid, $hg2.groupid)
         $ug1.rights | select -ExpandProperty permission | Should Be @(3, 3)
     }
     It "can alter and clear permissions on a host group without touching permissions on other groups" {
-        $ug1 = get-Usergroup pestertest1
-        $ug2 = get-Usergroup pestertest2
-        $hg1 = get-HostGroup pestertest1
-        $hg2 = get-HostGroup pestertest2
+        $ug1 = Get-ZbxUserGroup pestertest1
+        $ug2 = Get-ZbxUserGroup pestertest2
+        $hg1 = Get-ZbxHostGroup pestertest1
+        $hg2 = Get-ZbxHostGroup pestertest2
 
         # Sanity check
         $ug1.rights | select -ExpandProperty id | Should Be @($hg1.groupid, $hg2.groupid)
         $ug1.rights | select -ExpandProperty permission | Should Be @(3, 3)
 
         # Set HG1 RO.
-        $ug1, $ug2 | Add-UserGroupPermission $hg1 ReadOnly | should be @($ug1.usrgrpid, $ug2.usrgrpid)
-        $ug1 = get-Usergroup pestertest1
-        $ug2 = get-Usergroup pestertest2
+        $ug1, $ug2 | Add-ZbxUserGroupPermission $hg1 ReadOnly | should be @($ug1.usrgrpid, $ug2.usrgrpid)
+        $ug1 = Get-ZbxUserGroup pestertest1
+        $ug2 = Get-ZbxUserGroup pestertest2
         $ug1.rights | select -ExpandProperty id | Should Be @($hg1.groupid, $hg2.groupid)
         $ug1.rights | select -ExpandProperty permission | Should Be @(2, 3)
 
         # Clear HG1
-        $ug1, $ug2 | Add-UserGroupPermission $hg1 Clear | should be @($ug1.usrgrpid, $ug2.usrgrpid)
-        $ug1 = get-Usergroup pestertest1
-        $ug2 = get-Usergroup pestertest2
+        $ug1, $ug2 | Add-ZbxUserGroupPermission $hg1 Clear | should be @($ug1.usrgrpid, $ug2.usrgrpid)
+        $ug1 = Get-ZbxUserGroup pestertest1
+        $ug2 = Get-ZbxUserGroup pestertest2
         $ug1.rights | select -ExpandProperty id | Should Be @($hg2.groupid)
         $ug1.rights | select -ExpandProperty permission | Should Be @(3)
     }
@@ -531,77 +531,77 @@ Describe "Get-MediaType" {
     }         
 }
 
-Describe "Add-UserMail" {
+Describe "Add-ZbxUserMail" {
     It "can add a mail to a user without mail" {
-        $u = @(New-User -Alias "pestertestmedia$(get-random)" -name "marsu" -UserGroupId 8)[0]
-        $u | Add-UserMail toto1@company.com | Should Not BeNullOrEmpty
+        $u = @(New-ZbxUser -Alias "pestertestmedia$(Get-random)" -name "marsu" -ZbxUserGroupId 8)[0]
+        $u | Add-ZbxUserMail toto1@company.com | Should Not BeNullOrEmpty
     }
     It "can add a mail with specific severity filter" {
-        $u = @(New-User -Alias "pestertestmedia$(get-random)" -name "marsu" -UserGroupId 8)[0]
-        $u | Add-UserMail toto1@company.com Information, Warning | Should Not BeNullOrEmpty
+        $u = @(New-ZbxUser -Alias "pestertestmedia$(Get-random)" -name "marsu" -ZbxUserGroupId 8)[0]
+        $u | Add-ZbxUserMail toto1@company.com Information, Warning | Should Not BeNullOrEmpty
     }
 }
 
-Describe "Get-Media" {
+Describe "Get-ZbxMedia" {
     It "can return all media" {
-        Get-Media |  Should Not BeNullOrEmpty
+        Get-ZbxMedia |  Should Not BeNullOrEmpty
     }
 
     It "can filter by media type" {
-        Get-Media -MediaTypeId (Get-MediaType -Type email).mediatypeid |  Should Not BeNullOrEmpty
+        Get-ZbxMedia -MediaTypeId (Get-MediaType -Type email).mediatypeid |  Should Not BeNullOrEmpty
     }
 
     It "can filter actions used by certain users" {
-        Get-Media -UserId @(Get-User -Name "pestertestmedia*")[0].userid |  Should Not BeNullOrEmpty
-        Get-Media -UserId @(Get-User -Name "Admin")[0].userid |  Should BeNullOrEmpty
+        Get-ZbxMedia -UserId @(Get-ZbxUser -Name "pestertestmedia*")[0].userid |  Should Not BeNullOrEmpty
+        Get-ZbxMedia -UserId @(Get-ZbxUser -Name "Admin")[0].userid |  Should BeNullOrEmpty
     }
 }
 
-Describe "Remove-Media" {
+Describe "Remove-ZbxMedia" {
     It "can remove piped media" {
-        Get-Media | Remove-Media |  Should Not BeNullOrEmpty
-        Get-Media |  Should BeNullOrEmpty
-        Get-User -Name "pestertestmedia*" | Remove-User > $null
+        Get-ZbxMedia | Remove-ZbxMedia |  Should Not BeNullOrEmpty
+        Get-ZbxMedia |  Should BeNullOrEmpty
+        Get-ZbxUser -Name "pestertestmedia*" | Remove-ZbxUser > $null
     }
 }
 
-Describe "Disable-UserGroup" {
+Describe "Disable-ZbxUserGroup" {
     BeforeAll {
-        New-UserGroup -Name "pestertestenable1" -errorAction silentlycontinue
-        $h1 = get-usergroup pestertestenable1
+        New-ZbxUserGroup -Name "pestertestenable1" -errorAction silentlycontinue
+        $h1 = Get-ZbxUserGroup pestertestenable1
     }
 
     It "can disable multiple piped objects" {
-        $h1 | Disable-UserGroup | should be @($h1.usrgrpid)
-        [int](get-usergroup pestertestenable1).users_status | should be 1
+        $h1 | Disable-ZbxUserGroup | should be @($h1.usrgrpid)
+        [int](Get-ZbxUserGroup pestertestenable1).users_status | should be 1
     }
 }
 
-Describe "Enable-UserGroup" {
+Describe "Enable-ZbxUserGroup" {
     BeforeAll {
-        New-UserGroup -Name "pestertestenable1" -errorAction silentlycontinue
-        $h1 = get-usergroup pestertestenable1
+        New-ZbxUserGroup -Name "pestertestenable1" -errorAction silentlycontinue
+        $h1 = Get-ZbxUserGroup pestertestenable1
     }
 
     It "can enable multiple piped objects" {
-        $h1 | Enable-UserGroup | should be @($h1.usrgrpid)
-        [int](get-usergroup pestertestenable1).users_status | should be 0
+        $h1 | Enable-ZbxUserGroup | should be @($h1.usrgrpid)
+        [int](Get-ZbxUserGroup pestertestenable1).users_status | should be 0
     }
 }
 
-Describe "Update-Host" {
+Describe "Update-ZbxHost" {
     BeforeAll {
         $name = "pestertesthost$(Get-Random)"
-        Get-Host -name "perster*" | remove-host
-        Get-Host -name "newname" | remove-host
-        $h = New-Host -Name $name -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        Get-ZbxHost -name "perster*" | remove-ZbxHost
+        Get-ZbxHost -name "newname" | remove-ZbxHost
+        $h = New-ZbxHost -Name $name -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
     }
 
     It "can update the name of a host" {
         $h.name = "newname"
-        $h | update-host 
-            $h | update-host 
-        $h | update-host 
-        get-host -id $h.hostid | select -ExpandProperty name | should be "newname"
+        $h | Update-ZbxHost 
+            $h | Update-ZbxHost 
+        $h | Update-ZbxHost 
+        Get-ZbxHost -id $h.hostid | select -ExpandProperty name | should be "newname"
     }
 }
