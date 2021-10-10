@@ -50,12 +50,12 @@ Describe "New-ZbxApiSession" {
 
 Describe "New-ZbxHost" {
     It "can create an enabled host from explicit ID parameters" {
-        $h = New-ZbxHost -Name "pestertesthost$(Get-Random)" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost
+        $h = New-ZbxHost -Name "pestertesthost$(Get-Random)" -HostGroupId 2 -TemplateId 10108 -Dns localhost
         $h | Should -Not -Be $null
         $h.status | Should -Be 0
     }
     It "can create an disabled host from explicit ID parameters" {
-        $h = New-ZbxHost -Name "pestertesthost$(Get-Random)" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -status disabled
+        $h = New-ZbxHost -Name "pestertesthost$(Get-Random)" -HostGroupId 2 -TemplateId 10108 -Dns localhost -status disabled
         $h | Should -Not -Be $null
         $h.status | Should -Be 1
     }
@@ -75,41 +75,41 @@ Describe "Get-ZbxHost" {
     }
     It "can filter by group membership (explicit parameter)" {
         $h = (Get-ZbxHost "pestertesthost*")[0]
-        (Get-ZbxHost -Id $h.hostid -ZbxHostGroupId 2).host | Should -Be $h.host
+        (Get-ZbxHost -Id $h.hostid -HostGroupId 2).host | Should -Be $h.host
     }
 }
 
 Describe "Remove-ZbxHost" {
     It "can delete from one explicit ID parameter" {
-        New-ZbxHost -Name "pestertesthostrem" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         $h = Get-ZbxHost pestertesthostrem
         remove-ZbxHost $h.hostid | Should -Be $h.hostid
     }
     It "can delete from multiple explicit ID parameters" {
-        $h1 = New-ZbxHost -Name "pestertesthostrem" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost
-        $h2 = New-ZbxHost -Name "pestertesthostrem2" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        $h1 = New-ZbxHost -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
+        $h2 = New-ZbxHost -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         remove-ZbxHost $h1.hostid, $h2.hostid | Should -Be @($h1.hostid, $h2.hostid)
     }
     It "can delete from multiple piped IDs" {
-        $h1 = New-ZbxHost -Name "pestertesthostrem" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost
-        $h2 = New-ZbxHost -Name "pestertesthostrem2" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost
+        $h1 = New-ZbxHost -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
+        $h2 = New-ZbxHost -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId 10108 -Dns localhost
         $h1.hostid, $h2.hostid | remove-ZbxHost | Should -Be @($h1.hostid, $h2.hostid)
     }
     It "can delete from one piped object parameter" {
-        $h = New-ZbxHost -Name "pestertesthostrem" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost
+        $h = New-ZbxHost -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
         $h | remove-ZbxHost | Should -Be $h.hostid
     }
     It "can delete from multiple piped objects" {
-        $h1 = New-ZbxHost -Name "pestertesthostrem" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost
-        $h2 = New-ZbxHost -Name "pestertesthostrem2" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost
+        $h1 = New-ZbxHost -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
+        $h2 = New-ZbxHost -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId 10108 -Dns localhost
         $h1, $h2 | remove-ZbxHost | Should -Be @($h1.hostid, $h2.hostid)
     }
 }
 
 Describe "Disable-ZbxHost" {
     BeforeAll {
-        New-ZbxHost -Name "pestertesthost1" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-ZbxHost -Name "pestertesthost2" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         $h1 = Get-ZbxHost pestertesthost1
         $h2 = Get-ZbxHost pestertesthost2
     }
@@ -130,8 +130,8 @@ Describe "Disable-ZbxHost" {
 
 Describe "Enable-ZbxHost" {
     BeforeAll {
-        New-ZbxHost -Name "pestertesthost1" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-ZbxHost -Name "pestertesthost2" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         $h1 = Get-ZbxHost pestertesthost1
         $h2 = Get-ZbxHost pestertesthost2
     }
@@ -152,8 +152,8 @@ Describe "Enable-ZbxHost" {
 
 Describe "Add-ZbxHostGroupMembership" {
     BeforeAll {
-        New-ZbxHost -Name "pestertesthost1" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-ZbxHost -Name "pestertesthost2" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         $h1 = Get-ZbxHost pestertesthost1
         $h2 = Get-ZbxHost pestertesthost2
         New-ZbxHostGroup "pestertest1" -errorAction silentlycontinue
@@ -170,8 +170,8 @@ Describe "Add-ZbxHostGroupMembership" {
 
 Describe "Remove-ZbxHostGroupMembership" {
     BeforeAll {
-        New-ZbxHost -Name "pestertesthost1" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-ZbxHost -Name "pestertesthost2" -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         $h1 = Get-ZbxHost pestertesthost1
         $h2 = Get-ZbxHost pestertesthost2
         New-ZbxHostGroup "pestertest1" -errorAction silentlycontinue
@@ -342,12 +342,12 @@ Describe "Get-ZbxUser" {
 
 Describe "New-ZbxUser" {
     It "creates a new user with explicit parameters" {
-        $g = @(New-ZbxUser -Alias "pestertest$(Get-random)" -name "marsu" -ZbxUserGroupId 8)
+        $g = @(New-ZbxUser -Alias "pestertest$(Get-random)" -name "marsu" -UserGroupId 8)
         $g.count | Should -Be 1
         $g[0].name | Should -Match "marsu"
     }
     It "creates a new user from another user (copy)" {
-        $u = @(New-ZbxUser -Alias "pestertest$(Get-random)" -name "marsu" -ZbxUserGroupId 8)
+        $u = @(New-ZbxUser -Alias "pestertest$(Get-random)" -name "marsu" -UserGroupId 8)
         $g = $u | New-ZbxUser -alias "pestertest$(Get-random)"
         $g.userid | Should -Not -Be $null
         $g.name | Should -Match "marsu"
@@ -357,37 +357,37 @@ Describe "New-ZbxUser" {
 
 Describe "Remove-ZbxUser" {
     It "can delete from one explicit ID parameter" {
-        New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 -errorAction silentlycontinue
+        New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 -errorAction silentlycontinue
         $h = Get-ZbxUser pestertestrem
         Remove-ZbxUser $h.userid | Should -Be $h.userid
         Get-ZbxUser pestertestrem | Should -Throw
     }
     It "can delete from multiple explicit ID parameters" {
-        $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
-            $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
-        $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
-        $h2 = New-ZbxUser -Alias "pestertestrem2" -ZbxUserGroupId 8  -errorAction silentlycontinue
+        $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
+            $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
+        $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
+        $h2 = New-ZbxUser -Alias "pestertestrem2" -UserGroupId 8  -errorAction silentlycontinue
         $h2 = Get-ZbxUser pestertestrem2
         Remove-ZbxUser $h1.userid, $h2.userid | Should -Be @($h1.userid, $h2.userid)
         Get-ZbxUser pestertestrem | Should -Throw
         Get-ZbxUser pestertestrem2 | Should -Throw
     }
     It "can delete from multiple piped IDs" {
-        $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
-            $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
-        $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
-        $h2 = New-ZbxUser -Alias "pestertestrem2" -ZbxUserGroupId 8 
+        $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
+            $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
+        $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
+        $h2 = New-ZbxUser -Alias "pestertestrem2" -UserGroupId 8 
         $h1.userid, $h2.userid | Remove-ZbxUser | Should -Be @($h1.userid, $h2.userid)
     }
     It "can delete from one piped object parameter" {
-        $h = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
+        $h = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
         $h | Remove-ZbxUser | Should -Be $h.userid
     }
     It "can delete from multiple piped objects" {
-        $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
-            $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
-        $h1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8 
-        $h2 = New-ZbxUser -Alias "pestertestrem2" -ZbxUserGroupId 8 
+        $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
+            $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
+        $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
+        $h2 = New-ZbxUser -Alias "pestertestrem2" -UserGroupId 8 
         $h1, $h2 | Remove-ZbxUser | Should -Be @($h1.userid, $h2.userid)
     }
 }
@@ -402,8 +402,8 @@ Describe "Add-ZbxUserGroupMembership" {
         $g1 = Get-ZbxUserGroup pestertestmembers
         $g2 = Get-ZbxUserGroup pestertestmembers2
 
-        $u1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8
-        $u2 = New-ZbxUser -Alias "pestertestrem2" -ZbxUserGroupId 8
+        $u1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8
+        $u2 = New-ZbxUser -Alias "pestertestrem2" -UserGroupId 8
         $u1 = Get-ZbxUser pestertestrem
         $u2 = Get-ZbxUser pestertestrem2
 
@@ -421,8 +421,8 @@ Describe "Add-ZbxUserGroupMembership" {
         $g1 = Get-ZbxUserGroup pestertestmembers3
         $g2 = Get-ZbxUserGroup pestertestmembers4
 
-        $u1 = New-ZbxUser -Alias "pestertestrem3" -ZbxUserGroupId 8
-        $u2 = New-ZbxUser -Alias "pestertestrem4" -ZbxUserGroupId 8
+        $u1 = New-ZbxUser -Alias "pestertestrem3" -UserGroupId 8
+        $u2 = New-ZbxUser -Alias "pestertestrem4" -UserGroupId 8
         $u1 = Get-ZbxUser pestertestrem3
         $u2 = Get-ZbxUser pestertestrem4
 
@@ -443,8 +443,8 @@ Describe "Remove-ZbxUserGroupMembership" {
         $g1 = Get-ZbxUserGroup pestertestmembers
         $g2 = Get-ZbxUserGroup pestertestmembers2
 
-        $u1 = New-ZbxUser -Alias "pestertestrem" -ZbxUserGroupId 8
-        $u2 = New-ZbxUser -Alias "pestertestrem2" -ZbxUserGroupId 8
+        $u1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8
+        $u2 = New-ZbxUser -Alias "pestertestrem2" -UserGroupId 8
         $u1 = Get-ZbxUser pestertestrem
         $u2 = Get-ZbxUser pestertestrem2
 
@@ -463,8 +463,8 @@ Describe "Remove-ZbxUserGroupMembership" {
         $g1 = Get-ZbxUserGroup pestertestmembers3
         $g2 = Get-ZbxUserGroup pestertestmembers4
 
-        $u1 = New-ZbxUser -Alias "pestertestrem3" -ZbxUserGroupId 8
-        $u2 = New-ZbxUser -Alias "pestertestrem4" -ZbxUserGroupId 8
+        $u1 = New-ZbxUser -Alias "pestertestrem3" -UserGroupId 8
+        $u2 = New-ZbxUser -Alias "pestertestrem4" -UserGroupId 8
         $u1 = Get-ZbxUser pestertestrem3
         $u2 = Get-ZbxUser pestertestrem4
 
@@ -536,11 +536,11 @@ Describe "Get-MediaType" {
 
 Describe "Add-ZbxUserMail" {
     It "can add a mail to a user without mail" {
-        $u = @(New-ZbxUser -Alias "pestertestmedia$(Get-random)" -name "marsu" -ZbxUserGroupId 8)[0]
+        $u = @(New-ZbxUser -Alias "pestertestmedia$(Get-random)" -name "marsu" -UserGroupId 8)[0]
         $u | Add-ZbxUserMail toto1@company.com | Should -Not -BeNullOrEmpty
     }
     It "can add a mail with specific severity filter" {
-        $u = @(New-ZbxUser -Alias "pestertestmedia$(Get-random)" -name "marsu" -ZbxUserGroupId 8)[0]
+        $u = @(New-ZbxUser -Alias "pestertestmedia$(Get-random)" -name "marsu" -UserGroupId 8)[0]
         $u | Add-ZbxUserMail toto1@company.com Information, Warning | Should -Not -BeNullOrEmpty
     }
 }
@@ -597,7 +597,7 @@ Describe "Update-ZbxHost" {
         $name = "pestertesthost$(Get-Random)"
         Get-ZbxHost -name "perster*" | remove-ZbxHost
         Get-ZbxHost -name "newname" | remove-ZbxHost
-        $h = New-ZbxHost -Name $name -ZbxHostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        $h = New-ZbxHost -Name $name -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
     }
 
     It "can update the name of a host" {
