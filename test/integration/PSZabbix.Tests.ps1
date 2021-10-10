@@ -6,7 +6,10 @@ BeforeAll {
         $moduleRoot = "$PSScriptRoot/../../"
         Import-Module $moduleRoot/$moduleName.psd1 -Force
 
-        $global:baseUrl = "http://tools/zabbix/api_jsonrpc.php"
+        $global:baseUrl = $env:DEV_ZABBIX_API_URL
+        if ('' -eq $global:baseUrl) {
+            $global:baseUrl = "http://tools/zabbix/api_jsonrpc.php"
+        }
         $secpasswd = ConvertTo-SecureString "zabbix" -AsPlainText -Force
         $global:admin = New-Object System.Management.Automation.PSCredential ("Admin", $secpasswd)
         
