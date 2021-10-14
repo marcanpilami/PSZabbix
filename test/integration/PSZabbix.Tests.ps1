@@ -44,7 +44,7 @@ Describe "New-ZbxApiSession" {
 
     It "fails when URL is wrong" {
         { New-ZbxApiSession "http://localhost:12345/zabbix" $admin } | Should -Throw
-    } -Skip
+    }
 
     It "fails when login/password is wrong" {
         { New-ZbxApiSession $baseUrl $admin2 } | Should -Throw
@@ -83,28 +83,29 @@ Describe "Get-ZbxHost" {
 }
 
 Describe "Remove-ZbxHost" {
+    BeforeEach {
+        $h1 = New-ZbxHost -Name "pestertesthostrem" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost -errorAction silentlycontinue
+        $h2 = New-ZbxHost -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost -errorAction silentlycontinue
+        # if the test before failed e.g. because the host already exists, New-Host returns $null
+        if ($null -eq $h1) { $h1 = Get-ZbxHost "pestertesthostrem" }
+        if ($null -eq $h2) { $h2 = Get-ZbxHost "pestertesthostrem2" }
+    }
+    AfterAll {
+        remove-ZbxHost $h1.hostid, $h2.hostid -ErrorAction silentlycontinue
+    }
     It "can delete from one explicit ID parameter" {
-        New-ZbxHost -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        $h = Get-ZbxHost pestertesthostrem
-        remove-ZbxHost $h.hostid | Should -Be $h.hostid
+        remove-ZbxHost $h1.hostid | Should -Be $h1.hostid
     }
     It "can delete from multiple explicit ID parameters" {
-        $h1 = New-ZbxHost -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
-        $h2 = New-ZbxHost -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
         remove-ZbxHost $h1.hostid, $h2.hostid | Should -Be @($h1.hostid, $h2.hostid)
     }
     It "can delete from multiple piped IDs" {
-        $h1 = New-ZbxHost -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
-        $h2 = New-ZbxHost -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId 10108 -Dns localhost
         $h1.hostid, $h2.hostid | remove-ZbxHost | Should -Be @($h1.hostid, $h2.hostid)
     }
     It "can delete from one piped object parameter" {
-        $h = New-ZbxHost -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
-        $h | remove-ZbxHost | Should -Be $h.hostid
+        $h1 | remove-ZbxHost | Should -Be $h1.hostid
     }
     It "can delete from multiple piped objects" {
-        $h1 = New-ZbxHost -Name "pestertesthostrem" -HostGroupId 2 -TemplateId 10108 -Dns localhost
-        $h2 = New-ZbxHost -Name "pestertesthostrem2" -HostGroupId 2 -TemplateId 10108 -Dns localhost
         $h1, $h2 | remove-ZbxHost | Should -Be @($h1.hostid, $h2.hostid)
     }
 }
