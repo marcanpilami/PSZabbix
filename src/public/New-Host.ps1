@@ -113,6 +113,6 @@ function New-Host
     }
 
     $r = Invoke-ZabbixApi $session "host.create" $prms
-    Get-Host -session $s -Id $r.hostids
+    if ($r) { Get-Host -session $s -Id $r.hostids }
 }
 
