@@ -17,6 +17,9 @@ BeforeAll {
         $global:admin2 = New-Object System.Management.Automation.PSCredential ("Admin", $wrongsecpasswd)
         
         $s = New-ZbxApiSession $baseUrl $global:admin -silent
+
+        $testTemplate = Get-ZbxTemplate | Select-Object -First 1
+        $testTemplateId = $testTemplate.templateid
     } Catch {
         $e = $_
         Write-Warning "Error setup Tests $e $($_.exception)"
@@ -50,12 +53,12 @@ Describe "New-ZbxApiSession" {
 
 Describe "New-ZbxHost" {
     It "can create an enabled host from explicit ID parameters" {
-        $h = New-ZbxHost -Name "pestertesthost$(Get-Random)" -HostGroupId 2 -TemplateId 10108 -Dns localhost
+        $h = New-ZbxHost -Name "pestertesthost$(Get-Random)" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost
         $h | Should -Not -Be $null
         $h.status | Should -Be 0
     }
     It "can create an disabled host from explicit ID parameters" {
-        $h = New-ZbxHost -Name "pestertesthost$(Get-Random)" -HostGroupId 2 -TemplateId 10108 -Dns localhost -status disabled
+        $h = New-ZbxHost -Name "pestertesthost$(Get-Random)" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost -status disabled
         $h | Should -Not -Be $null
         $h.status | Should -Be 1
     }
@@ -108,8 +111,8 @@ Describe "Remove-ZbxHost" {
 
 Describe "Disable-ZbxHost" {
     BeforeAll {
-        New-ZbxHost -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-ZbxHost -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost1" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost2" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost -errorAction silentlycontinue
         $h1 = Get-ZbxHost pestertesthost1
         $h2 = Get-ZbxHost pestertesthost2
     }
@@ -130,8 +133,8 @@ Describe "Disable-ZbxHost" {
 
 Describe "Enable-ZbxHost" {
     BeforeAll {
-        New-ZbxHost -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-ZbxHost -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost1" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost2" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost -errorAction silentlycontinue
         $h1 = Get-ZbxHost pestertesthost1
         $h2 = Get-ZbxHost pestertesthost2
     }
@@ -152,8 +155,8 @@ Describe "Enable-ZbxHost" {
 
 Describe "Add-ZbxHostGroupMembership" {
     BeforeAll {
-        New-ZbxHost -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-ZbxHost -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost1" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost2" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost -errorAction silentlycontinue
         $h1 = Get-ZbxHost pestertesthost1
         $h2 = Get-ZbxHost pestertesthost2
         New-ZbxHostGroup "pestertest1" -errorAction silentlycontinue
@@ -170,8 +173,8 @@ Describe "Add-ZbxHostGroupMembership" {
 
 Describe "Remove-ZbxHostGroupMembership" {
     BeforeAll {
-        New-ZbxHost -Name "pestertesthost1" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
-        New-ZbxHost -Name "pestertesthost2" -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost1" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost -errorAction silentlycontinue
+        New-ZbxHost -Name "pestertesthost2" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost -errorAction silentlycontinue
         $h1 = Get-ZbxHost pestertesthost1
         $h2 = Get-ZbxHost pestertesthost2
         New-ZbxHostGroup "pestertest1" -errorAction silentlycontinue
@@ -597,7 +600,7 @@ Describe "Update-ZbxHost" {
         $name = "pestertesthost$(Get-Random)"
         Get-ZbxHost -name "perster*" | remove-ZbxHost
         Get-ZbxHost -name "newname" | remove-ZbxHost
-        $h = New-ZbxHost -Name $name -HostGroupId 2 -TemplateId 10108 -Dns localhost -errorAction silentlycontinue
+        $h = New-ZbxHost -Name $name -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost -errorAction silentlycontinue
     }
 
     It "can update the name of a host" {
