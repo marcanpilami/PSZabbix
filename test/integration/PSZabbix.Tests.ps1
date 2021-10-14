@@ -332,16 +332,27 @@ Describe "Remove-ZbxUserGroup" {
 
 Describe "Get-ZbxUser" {
     It "can return all users" {
-        Get-ZbxUser | Should -Not -BeNullOrEmpty
+        $ret = Get-ZbxUser
+        $ret | Should -Not -BeNullOrEmpty
     }
     It "can filter by name with wildcard (explicit parameter)" {
-        Get-ZbxUser "Admi*" | Should -Not -BeNullOrEmpty
-        Get-ZbxUser "XXXXXXXXXXXXXX" | Should -BeNullOrEmpty
+        $ret = Get-ZbxUser "Admi*"
+        $ret | Should -Not -BeNullOrEmpty
+        $ret | Should -HaveCount 1
+        $ret.Alias | Should -Be 'Admin'
+        $ret.Name | Should -Be 'Zabbix'
     }
     It "can filter by ID (explicit parameter)" {
-        $h = (Get-ZbxUser "Admin")[0]
+        $h = Get-ZbxUser "Admin"
+        $h | Should -HaveCount 1
         (Get-ZbxUser -Id $h.userid).alias | Should -Be $h.alias
-    }      
+    }
+    It "returns nothing on unknown user" {
+        $ret = Get-ZbxUser "XXXXXXXXXXXXXX"
+        $ret | Should -BeNullOrEmpty
+        $ret = Get-ZbxUser -Id 9999999
+        $ret | Should -BeNullOrEmpty
+    }
 }
 
 Describe "New-ZbxUser" {
