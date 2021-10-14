@@ -41,6 +41,7 @@ function Remove-Host
     end
     {
         if ($prms.Count -eq 0) { return }
+        $prms = @{ array = $prms }
         Invoke-ZabbixApi $session "host.delete" $prms | Select-Object -ExpandProperty hostids
     }
 }
