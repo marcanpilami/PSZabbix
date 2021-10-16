@@ -62,6 +62,10 @@ Describe "New-ZbxHost" {
         $h | Should -Not -Be $null
         $h.status | Should -Be 1
     }
+    It "should throw if invalid Group or template Id" {
+        { New-ZbxHost -Name "pestertesthost$(Get-Random)" -HostGroupId 2 -TemplateId 9999 -Dns localhost -status disabled } | Should -Throw
+        { New-ZbxHost -Name "pestertesthost$(Get-Random)" -HostGroupId 9999 -TemplateId $testTemplateId -Dns localhost -status disabled } | Should -Throw
+    }
 }
 
 Describe "Get-ZbxHost" {
