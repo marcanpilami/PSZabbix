@@ -45,6 +45,8 @@ function Add-HostGroupMembership
     }
     end
     {
+        if ($prms.Count -eq 0) { return }
+        $prms = @{ array = $prms }
         Invoke-ZabbixApi $session "host.massadd" $prms | Select-Object -ExpandProperty hostids
     }
 }
