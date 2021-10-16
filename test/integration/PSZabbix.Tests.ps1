@@ -121,6 +121,9 @@ Describe "Disable-ZbxHost" {
         $h1 = Get-ZbxHost pestertesthost1
         $h2 = Get-ZbxHost pestertesthost2
     }
+    AfterAll {
+        Remove-ZbxHost $h1.HostId,$h2.HostId
+    }
 
     It "can enable multiple piped objects" {
         $h1, $h2 | Disable-ZbxHost | Should -Be @($h1.hostid, $h2.hostid)
@@ -142,6 +145,12 @@ Describe "Enable-ZbxHost" {
         New-ZbxHost -Name "pestertesthost2" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost -errorAction silentlycontinue
         $h1 = Get-ZbxHost pestertesthost1
         $h2 = Get-ZbxHost pestertesthost2
+    }
+    BeforeEach {
+        Disable-ZbxHost $h1.hostid, $h2.hostid
+    }
+    AfterAll {
+        Remove-ZbxHost $h1.HostId,$h2.HostId
     }
 
     It "can enable multiple piped objects" {
