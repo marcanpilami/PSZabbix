@@ -90,7 +90,7 @@ function New-User
     {
         $prms = @{}
         $media = @()
-        if ($MailAddress -ne $null)
+        if ($MailAddress -ne '')
         {
             $media += @{
                 mediatypeid = @(Get-MediaType -Type email)[0].mediatypeid
