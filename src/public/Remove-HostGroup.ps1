@@ -41,6 +41,7 @@ function Remove-HostGroup
     end
     {
         if ($prms.Count -eq 0) { return }
+        $prms = @{ array = $prms }
         Invoke-ZabbixApi $session "hostgroup.delete" $prms | Select-Object -ExpandProperty groupids
     }
 }

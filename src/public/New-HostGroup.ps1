@@ -43,13 +43,12 @@ function New-HostGroup
     }
     process
     {
-        # $Name |% { $prms += @{name = $_} }
-        $Name |% { $prms += $_ }
+        $Name |% { $prms += @{name = $_} }
     }
     end
     {
         if ($prms.Count -eq 0) { return }
-        $prms = @{ name = $prms }
+        $prms = @{ array = $prms }
         $r = Invoke-ZabbixApi $session "hostgroup.create" $prms
         Get-HostGroup -Session $s -Id $r.groupids
     }
