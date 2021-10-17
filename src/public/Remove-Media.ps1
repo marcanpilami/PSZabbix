@@ -41,6 +41,7 @@ function Remove-Media
     end
     {
         if ($prms.Count -eq 0) { return }
+        $prms = @{ array = $prms }
         Invoke-ZabbixApi $session "user.deletemedia"  $prms | Select-Object -ExpandProperty mediaids
     }
 }
