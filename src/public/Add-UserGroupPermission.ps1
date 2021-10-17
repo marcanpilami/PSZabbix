@@ -43,8 +43,15 @@ function Add-UserGroupPermission
     )
     begin
     {
-        $newRights = if ($Permission -eq [ZbxPermission]::Clear) {@()} else {@($HostGroup |% {@{id = $_.groupid; permission = [int]$Permission}} )}
-        $HostGroupIds = @($HostGroup | select -ExpandProperty groupid)
+        $newRights = @()
+        if ($Permission -ne [ZbxPermission]::Clear) {
+            $newRights = [pscustomobject] @(
+                $HostGroup | ForEach-Object {
+                        @{id = $_.groupid; permission = [int]$Permission}
+                    }
+                )
+            }
+        $HostGroupIds = @($HostGroup | Select-Object -ExpandProperty groupid)
         $usrgrpids = @()
         $prms = @()
     }
@@ -75,9 +82,9 @@ function Add-UserGroupPermission
             $rights += $newRights
 
             # Finaly create the update object
-            $prms += @{usrgrpid = $usergroup.usrgrpid; rights = $rights}
+            $prms += [PSCustomObject] @{usrgrpid = $usergroup.usrgrpid; rights = $rights}
         }
-
+        $prms = @{ array = $prms }
         Invoke-ZabbixApi $session "usergroup.update" $prms | Select-Object -ExpandProperty usrgrpids
     }
 }
