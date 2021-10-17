@@ -396,39 +396,33 @@ Describe "New-ZbxUser" {
 }
 
 Describe "Remove-ZbxUser" {
+    BeforeEach {
+        New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 -errorAction silentlycontinue | Should -Not -BeNullOrEmpty
+        New-ZbxUser -Alias "pestertestrem2" -UserGroupId 8 -errorAction silentlycontinue  | Should -Not -BeNullOrEmpty
+        $user1 = Get-ZbxUser -Name 'pestertestrem'
+        $user2 = Get-ZbxUser -Name 'pestertestrem2'
+    }
+    AfterEach {
+        Remove-ZbxUser $user1.userid -ErrorAction silentlycontinue
+        Remove-ZbxUser $user2.userid -ErrorAction silentlycontinue
+    }
     It "can delete from one explicit ID parameter" {
-        New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 -errorAction silentlycontinue
-        $h = Get-ZbxUser pestertestrem
-        Remove-ZbxUser $h.userid | Should -Be $h.userid
-        Get-ZbxUser pestertestrem | Should -Throw
+        Remove-ZbxUser $user1.userid | Should -Be $user1.userid
+        Get-ZbxUser pestertestrem | Should -BeNullOrEmpty
     }
     It "can delete from multiple explicit ID parameters" {
-        $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
-            $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
-        $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
-        $h2 = New-ZbxUser -Alias "pestertestrem2" -UserGroupId 8  -errorAction silentlycontinue
-        $h2 = Get-ZbxUser pestertestrem2
-        Remove-ZbxUser $h1.userid, $h2.userid | Should -Be @($h1.userid, $h2.userid)
-        Get-ZbxUser pestertestrem | Should -Throw
-        Get-ZbxUser pestertestrem2 | Should -Throw
+        Remove-ZbxUser $user1.userid, $user2.userid | Should -Be @($User1.userid, $User2.userid)
+        Get-ZbxUser pestertestrem  | Should -BeNullOrEmpty
+        Get-ZbxUser pestertestrem2 | Should -BeNullOrEmpty
     }
     It "can delete from multiple piped IDs" {
-        $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
-            $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
-        $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
-        $h2 = New-ZbxUser -Alias "pestertestrem2" -UserGroupId 8 
-        $h1.userid, $h2.userid | Remove-ZbxUser | Should -Be @($h1.userid, $h2.userid)
+        $user1.userid, $user2.userid | Remove-ZbxUser | Should -Be @($user1.userid, $user2.userid)
     }
     It "can delete from one piped object parameter" {
-        $h = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
-        $h | Remove-ZbxUser | Should -Be $h.userid
+        $user1 | Remove-ZbxUser | Should -Be $user1.userid
     }
     It "can delete from multiple piped objects" {
-        $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
-            $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
-        $h1 = New-ZbxUser -Alias "pestertestrem" -UserGroupId 8 
-        $h2 = New-ZbxUser -Alias "pestertestrem2" -UserGroupId 8 
-        $h1, $h2 | Remove-ZbxUser | Should -Be @($h1.userid, $h2.userid)
+        $user1, $user2 | Remove-ZbxUser | Should -Be @($user1.userid, $user2.userid)
     }
 }
 
