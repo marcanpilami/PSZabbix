@@ -52,6 +52,9 @@ Describe "New-ZbxApiSession" {
 }
 
 Describe "New-ZbxHost" {
+    AfterAll {
+        Get-ZbxHost 'pestertesthost*' | Remove-ZbxHost
+    }
     It "can create an enabled host from explicit ID parameters" {
         $h = New-ZbxHost -Name "pestertesthost$(Get-Random)" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost
         $h | Should -Not -Be $null
@@ -69,6 +72,10 @@ Describe "New-ZbxHost" {
 }
 
 Describe "Get-ZbxHost" {
+    BeforeAll {
+        $h1 = New-ZbxHost -Name "pestertesthost1" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost
+        $h2 = New-ZbxHost -Name "pestertesthost2" -HostGroupId 2 -TemplateId $testTemplateId -Dns localhost
+    }
     It "can return all hosts" {
         Get-ZbxHost | Should -Not -BeNullOrEmpty
     }
@@ -181,6 +188,7 @@ Describe "Add-ZbxHostGroupMembership" {
     AfterAll {
         Remove-ZbxHostGroup $g1.GroupId
         Remove-ZbxHostGroup $g2.GroupId
+        Get-ZbxHost 'pestertesthost*' | Remove-ZbxHost
     }
 
     It "adds a set of groups given as a parameter to multiple piped hosts" {
@@ -199,6 +207,11 @@ Describe "Remove-ZbxHostGroupMembership" {
         New-ZbxHostGroup "pestertest2" -errorAction silentlycontinue
         $g1 = Get-ZbxHostGroup pestertest1
         $g2 = Get-ZbxHostGroup pestertest2
+    }
+    AfterAll {
+        Remove-ZbxHostGroup $g1.GroupId -ErrorAction silentlycontinue
+        Remove-ZbxHostGroup $g2.GroupId -ErrorAction silentlycontinue
+        Get-ZbxHost 'pestertesthost*' | Remove-ZbxHost -ErrorAction silentlycontinue
     }
 
     It "removes a set of groups given as a parameter to multiple piped hosts" {
@@ -381,6 +394,9 @@ Describe "New-ZbxUser" {
     BeforeAll {
         $userToCopy = "pestertest$(Get-random)"
     }
+    AfterAll {
+        Get-ZbxUser 'pestertest*' | Remove-ZbxUser
+    }
     It "creates a new user with explicit parameters" {
         $g = @(New-ZbxUser -Alias $userToCopy -name "marsu" -UserGroupId 8)
         $g.count | Should -Be 1
@@ -523,9 +539,15 @@ Describe "Remove-ZbxUserGroupMembership" {
 }
 
 Describe "Add-ZbxUserGroupPermission" {
-    It "can add a Read permission to two piped user groups on two host groups" {
+    BeforeAll {
+        Get-ZbxHostGroup "pester*" | remove-ZbxHostGroup -ErrorAction silentlycontinue
+        Get-ZbxUserGroup "pester*" | remove-ZbxUserGroup -ErrorAction silentlycontinue
+    }
+    AfterAll {
         Get-ZbxHostGroup "pester*" | remove-ZbxHostGroup
         Get-ZbxUserGroup "pester*" | remove-ZbxUserGroup
+    }
+    It "can add a Read permission to two piped user groups on two host groups" {
 
         New-ZbxUserGroup -Name "pestertest1", "pestertest2"
         $ug1 = Get-ZbxUserGroup pestertest1
@@ -616,6 +638,9 @@ Describe "Disable-ZbxUserGroup" {
         New-ZbxUserGroup -Name "pestertestenable1" -errorAction silentlycontinue
         $h1 = Get-ZbxUserGroup pestertestenable1
     }
+    AfterAll {
+        Get-ZbxUserGroup 'pestertestenable1' | Remove-ZbxUserGroup
+    }
 
     It "can disable multiple piped objects" {
         $h1 | Disable-ZbxUserGroup | Should -Be @($h1.usrgrpid)
@@ -627,6 +652,9 @@ Describe "Enable-ZbxUserGroup" {
     BeforeAll {
         New-ZbxUserGroup -Name "pestertestenable1" -errorAction silentlycontinue
         $h1 = Get-ZbxUserGroup pestertestenable1
+    }
+    AfterAll {
+        Get-ZbxUserGroup 'pestertestenable1' | Remove-ZbxUserGroup
     }
 
     It "can enable multiple piped objects" {
@@ -646,8 +674,7 @@ Describe "Update-ZbxHost" {
     It "can update the name of a host" {
         $h.name = "newname"
         $h | Update-ZbxHost 
-            $h | Update-ZbxHost 
-        $h | Update-ZbxHost 
         Get-ZbxHost -id $h.hostid | select -ExpandProperty name | Should -Be "newname"
+        Remove-ZbxHost $h.hostId
     }
 }
