@@ -24,13 +24,7 @@
 
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
-		"hbenl.vscode-test-explorer",
-		"mhutchie.git-graph",
-		"cschleiden.vscode-github-actions",
-		"tylerleonhardt.vscode-pester-test-adapter",
 		"ms-vscode.powershell",
-		"ms-azuretools.vscode-docker",
-		"github.vscode-pull-request-github"
 	]
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
