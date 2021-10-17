@@ -56,6 +56,7 @@ function New-UserGroup
     end
     {
         if ($prms.Count -eq 0) { return }
+        $prms = @{ array = $prms }
         $r = Invoke-ZabbixApi $session "usergroup.create" $prms
         Get-UserGroup -Session $s -Id $r.usrgrpids
     }
