@@ -567,13 +567,13 @@ Describe "Add-ZbxUserGroupPermission" {
     }
 }
 
-Describe "Get-MediaType" {
+Describe "Get-ZbxMediaType" {
     It "can return all types" {
-        Get-MediaType | Should -Not -BeNullOrEmpty
+        Get-ZbxMediaType | Should -Not -BeNullOrEmpty
     }
     It "can filter by technical media type" {
-        Get-MediaType -type Email | Should -Not -BeNullOrEmpty
-        Get-MediaType -type EzTexting | Should -BeNullOrEmpty
+        Get-ZbxMediaType -type Email | Should -Not -BeNullOrEmpty
+        Get-ZbxMediaType -type EzTexting | Should -BeNullOrEmpty
     }         
 }
 
