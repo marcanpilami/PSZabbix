@@ -88,7 +88,7 @@ function New-User
 
     begin
     {
-        $prms = @()
+        $prms = @{}
         $media = @()
         if ($MailAddress -ne $null)
         {
