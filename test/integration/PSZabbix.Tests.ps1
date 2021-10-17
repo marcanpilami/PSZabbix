@@ -585,7 +585,7 @@ Describe "Get-ZbxMedia" {
     }
 
     It "can filter by media type" {
-        Get-ZbxMedia -MediaTypeId (Get-MediaType -Type email).mediatypeid |  Should -Not -BeNullOrEmpty
+        Get-ZbxMedia -MediaTypeId (Get-ZbxMediaType -Type email).mediatypeid |  Should -Not -BeNullOrEmpty
     }
 
     It "can filter actions used by certain users" {
