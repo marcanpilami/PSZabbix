@@ -237,11 +237,16 @@ Describe "New-ZbxHostGroup" {
 
 Describe "Get-ZbxHostGroup" {
     It "can return all groups" {
-        Get-ZbxHostGroup | Should -Not -BeNullOrEmpty
+        $ret = Get-ZbxHostGroup
+        $ret | Should -Not -BeNullOrEmpty
+        $ret.Count | Should -BeGreaterThan 1
     }
     It "can filter by name with wildcard (explicit parameter)" {
-        Get-ZbxHostGroup "pestertest*" | Should -Not -BeNullOrEmpty
-        Get-ZbxHostGroup "XXXXXXXXXXXXXX" | Should -BeNullOrEmpty
+        $ret = Get-ZbxHostGroup "pestertest*"
+        $ret | Should -Not -BeNullOrEmpty
+        $ret.name | Should -BeLike 'pestertest*'
+        $ret = Get-ZbxHostGroup "XXXXXXXXXXXXXX"
+        $ret | Should -BeNullOrEmpty
     }
     It "can filter by ID (explicit parameter)" {
         $h = (Get-ZbxHostGroup "pestertest*")[0]
