@@ -30,7 +30,7 @@ function Update-Host
         [Parameter(Mandatory=$true, ValueFromPipeline=$true, Position=0)]
         [ValidateScript({ $_.PSObject.TypeNames[0] -eq 'ZabbixHost'})][ValidateNotNullOrEmpty()]
         # One or more hosts to update.
-        [PSObject[]]$Host
+        [PSObject[]] $HostObject
     )
     begin
     {
@@ -38,12 +38,13 @@ function Update-Host
     }
     process
     {
-        $Hosts += $Host
+        $Hosts += $HostObject
     }
     end
     {
         if ($Hosts.Count -eq 0) { return }
-        Invoke-ZabbixApi $session "host.update" $Hosts | Select-Object -ExpandProperty hostids
+        $prms = @{ array = $Hosts }
+        Invoke-ZabbixApi $session "host.update" $prms | Select-Object -ExpandProperty hostids
     }
 }
 
