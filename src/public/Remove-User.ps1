@@ -32,15 +32,16 @@ function Remove-User
 
     Begin
     {
-        $prms = @()
+        $allUserIds = @()
     }
     process
     {
-        $prms += $UserId
+        $allUserIds += $UserId
     }
     end
     {
-        if ($prms.Count -eq 0) { return }
+        if ($allUserIds.Count -eq 0) { return }
+        $prms = @{ array = $allUserIds }
         Invoke-ZabbixApi $session "user.delete"  $prms | Select-Object -ExpandProperty userids
     }
 }
