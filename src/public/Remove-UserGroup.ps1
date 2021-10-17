@@ -32,15 +32,16 @@ function Remove-UserGroup
 
     begin
     {
-        $prms = @()
+        $userGroupIds = @()
     }
     process
     {
-        $prms += $UserGroupId
+        $userGroupIds += $UserGroupId
     }
     end
     {
-        if ($prms.Count -eq 0) { return }
+        if ($userGroupIds.Count -eq 0) { return }
+        $prms = @{ array = $userGroupIds}
         Invoke-ZabbixApi $session "usergroup.delete" $prms | Select-Object -ExpandProperty usrgrpids
     }
 }
