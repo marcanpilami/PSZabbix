@@ -317,15 +317,15 @@ Describe "Remove-ZbxUserGroup" {
         New-ZbxUserGroup -Name "pestertestrem" -errorAction silentlycontinue
         $h = Get-ZbxUserGroup pestertestrem
         Remove-ZbxUserGroup $h.usrgrpid | Should -Be $h.usrgrpid
-        Get-ZbxUserGroup pestertestrem | Should -Throw
+        Get-ZbxUserGroup pestertestrem | Should -BeNullOrEmpty
     }
     It "can delete from multiple explicit ID parameters" {
         $h1 = New-ZbxUserGroup -Name "pestertestrem"
         $h2 = New-ZbxUserGroup -Name "pestertestrem2" -errorAction silentlycontinue
         $h2 = Get-ZbxUserGroup pestertestrem2
         remove-ZbxUserGroup $h1.usrgrpid, $h2.usrgrpid | Should -Be @($h1.usrgrpid, $h2.usrgrpid)
-        Get-ZbxUserGroup pestertestrem | Should -Throw
-        Get-ZbxUserGroup pestertestrem2 | Should -Throw
+        Get-ZbxUserGroup pestertestrem | Should -BeNullOrEmpty
+        Get-ZbxUserGroup pestertestrem2 | Should -BeNullOrEmpty
     }
     It "can delete from multiple piped IDs" {
         $h1 = New-ZbxUserGroup -Name "pestertestrem"
