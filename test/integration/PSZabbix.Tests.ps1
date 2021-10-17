@@ -263,15 +263,15 @@ Describe "Remove-ZbxHostGroup" {
         New-ZbxHostGroup -Name "pestertestrem" -errorAction silentlycontinue
         $h = Get-ZbxHostGroup pestertestrem
         remove-ZbxHostGroup $h.groupid | Should -Be $h.groupid
-        Get-ZbxHostGroup pestertestrem | Should -Throw
+        Get-ZbxHostGroup pestertestrem | Should -BeNullOrEmpty
     }
     It "can delete from multiple explicit ID parameters" {
         $h1 = New-ZbxHostGroup -Name "pestertestrem"
         $h2 = New-ZbxHostGroup -Name "pestertestrem2" -errorAction silentlycontinue
         $h2 = Get-ZbxHostgroup pestertestrem2
         remove-ZbxHostgroup $h1.groupid, $h2.groupid | Should -Be @($h1.groupid, $h2.groupid)
-        Get-ZbxHostGroup pestertestrem | Should -Throw
-        Get-ZbxHostGroup pestertestrem2 | Should -Throw
+        Get-ZbxHostGroup pestertestrem | Should -BeNullOrEmpty
+        Get-ZbxHostGroup pestertestrem2 | Should -BeNullOrEmpty
     }
     It "can delete from multiple piped IDs" {
         $h1 = New-ZbxHostGroup -Name "pestertestrem"
