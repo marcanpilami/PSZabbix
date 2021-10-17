@@ -178,6 +178,10 @@ Describe "Add-ZbxHostGroupMembership" {
         $g1 = Get-ZbxHostGroup pestertest1
         $g2 = Get-ZbxHostGroup pestertest2
     }
+    AfterAll {
+        Remove-ZbxHostGroup $g1.GroupId
+        Remove-ZbxHostGroup $g2.GroupId
+    }
 
     It "adds a set of groups given as a parameter to multiple piped hosts" {
         $h1, $h2 | Add-ZbxHostGroupMembership $g1, $g2
