@@ -1,4 +1,5 @@
 ﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 $latestSession = $null
 
 
@@ -243,6 +244,10 @@ function New-Host
         [PSCustomObject[]] $Template,
 
         [parameter(Mandatory=$false)]
+        [ValidateRange(0,1)]
+        [int] $inventorymode = 1,
+
+        [parameter(Mandatory=$false)]
         # An optional map of inventory properties
         $Inventory = @{},
 
@@ -260,41 +265,121 @@ function New-Host
 
         [parameter(Mandatory=$false)]
         # The ID of the proxy to use. Default is no proxy.
-        [int] $ProxyId
+        [int] $ProxyId,
+
+        [parameter(Mandatory=$false)]
+        # Type of Agent, 1= Agent, 2= SNMP, 3= IPMI, 4= JMX.
+        [int] $AgentType = 1,
+
+        [parameter(Mandatory=$false)]
+        # SNMP-Version, 1= SNMPv1, 2= SNMPv2c, 3= SNMPv3.
+        [ValidateRange(1,3)]
+        [int] $SNMPVersion = 2,
+
+        [parameter(Mandatory=$false)]
+        # Use SNMP bulk mode, 0= no, 1= yes.
+        [ValidateRange(0,1)]
+        [int] $SNMPBulk = 1,
+
+        [parameter(Mandatory=$false)]
+        # Use SNMP community.
+        [String] $community = "",
+        
+        [parameter(Mandatory=$false)]
+        # SNMP Securityname.
+        [String] $securityname = "",
+
+        [parameter(Mandatory=$false)]
+        # Use SNMP Security-level: 0= noAuthNoPriv, 1= authNoPriv, 2= authPriv.
+        [ValidateRange(0,2)]
+        [int] $securitylevel = 0,
+
+        [parameter(Mandatory=$false)]
+        # Use SNMP Authentication passphrase.
+        [String] $authpassphrase = "",
+        
+        [parameter(Mandatory=$false)]
+        # Use SNMP Privacy passphrase.
+        [String] $privpassphrase = "",
+
+        [parameter(Mandatory=$false)]
+        # Use SNMP Authenticationprotocol: 0= MD5, 1= SHA1, 2= SHA224 3= SHA256, 4= SHA384, 5= SHA512.
+        [ValidateRange(0,5)]
+        [int] $authprotocol = 0,
+
+        [parameter(Mandatory=$false)]
+        # Use SNMP Privacyprotocol: 0= DES, 1= AES128, 2= AES192, 3= AES256, 4= AES192C, 5= AES256C.
+        [ValidateRange(0,5)]
+        [int] $privprotocol = 0,
+
+        [parameter(Mandatory=$false)]
+        # Use SNMP Contextname.
+        [String] $contextname = "",
+
+        [parameter(Mandatory=$false)]
+        # Macros: [System.Collections.ArrayList]$macros = [System.Collections.ArrayList]::new(); $macros.Add(@{macro="Macro-Name";value="Value";description=""});
+        #       $macros.Add(@{macro="{`$SNMP_COMMUNITY}";value="public";description=""});
+        [object[]] $macros = $null
     )
 
     $isIp = 0
     try { [ipaddress]$Dns; $isIp = 1} catch {}
 
-    if ($Hostgroupid -ne $null)
+    if ($null -ne $Hostgroupid)
     {
         $HostGroup = @()
-        $HostGroupId |% { $HostGroup += @{"groupid" = $_} }
+        $HostGroupId | ForEach-Object { $HostGroup += @{"groupid" = $_} }
     }
-    if ($TemplateId -ne $null)
+    if ($null -ne $TemplateId)
     {
         $Template = @()
-        $TemplateId |% { $Template += @{"templateid" = $_} }
+        $TemplateId | ForEach-Object { $Template += @{"templateid" = $_} }
     }
 
-    $prms = @{
+    $IFDetails = [PSCustomObject]@{
+    }
+    if($AgentType -eq 2) {
+        $IFDetails = [PSCustomObject]@{
+            version = $SNMPVersion
+            bulk = $SNMPBulk
+        }
+
+        if($SNMPVersion -lt 3) {
+            Add-Member -InputObject $IFDetails -MemberType NoteProperty -Name "community" -Value $community
+        } else {
+            Add-Member -InputObject $IFDetails -MemberType NoteProperty -Name "securityname" -Value $securityname
+            Add-Member -InputObject $IFDetails -MemberType NoteProperty -Name "securitylevel" -Value $securitylevel
+            Add-Member -InputObject $IFDetails -MemberType NoteProperty -Name "authpassphrase" -Value $authpassphrase
+            Add-Member -InputObject $IFDetails -MemberType NoteProperty -Name "privpassphrase" -Value $privpassphrase
+            Add-Member -InputObject $IFDetails -MemberType NoteProperty -Name "authprotocol" -Value $authprotocol
+            Add-Member -InputObject $IFDetails -MemberType NoteProperty -Name "privprotocol" -Value $privprotocol
+            Add-Member -InputObject $IFDetails -MemberType NoteProperty -Name "contextname" -Value $contextname
+        }
+    }
+
+    $prms = [PSCustomObject]@{
         host = $Name
         name = if ([string]::IsNullOrWhiteSpace($VisibleName)) { $null } else { $VisibleName }
         description = $Description
-        interfaces = @( @{
-            type = 1
+        interfaces = @( [PSCustomObject]@{
+            type = $AgentType
             main = 1
             useip = $isIp
             dns = if ($isIp -eq 1) { "" } else { $Dns }
             ip = if ($isIp -eq 0) { "" } else { $Dns }
             port = $Port
+            details = $IFDetails
         })
         groups = $HostGroup
         templates = $Template
-        inventory_mode = 0
+        inventory_mode = $inventorymode
         inventory = $Inventory
         status = [int]$Status
         proxy_hostid = if ($ProxyId -eq $null) { "" } else { $ProxyId }
+    }
+
+    if($null -ne $macros) {
+        Add-Member -InputObject $prms -MemberType NoteProperty -Name "macros" -Value $macros
     }
 
     $r = Invoke-ZabbixApi $session "host.create" $prms
